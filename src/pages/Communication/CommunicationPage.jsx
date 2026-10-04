@@ -868,8 +868,6 @@ function CommunicationPage() {
         notes,
         messages,
 
-        currentAppointmentId,
-
         loadingNotes,
         loadingMessages,
 
