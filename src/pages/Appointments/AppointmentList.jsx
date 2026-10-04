@@ -1188,5 +1188,4 @@ const CancelActions = styled.div`
 
     flex-wrap: wrap;
 `;
-
 export default AppointmentList;
