@@ -8,6 +8,7 @@ import appointmentReducer from "../modules/appointments/appointmentSlice";
 import chatReducer from "../modules/chat/chatSlice";
 import staffReducer from "../modules/staff/staffSlice";
 import calendarReducer from "../modules/calendar/calendarSlice";
+import billingReducer from "../modules/billing/billingSlice";
 
 const rootReducer = combineReducers({
     auth: authReducer,
@@ -17,7 +18,8 @@ const rootReducer = combineReducers({
     appointments: appointmentReducer,
     chat: chatReducer,
     staff: staffReducer,
-    calendar: calendarReducer
+    calendar: calendarReducer,
+    billing: billingReducer
 });
 
 export default rootReducer;

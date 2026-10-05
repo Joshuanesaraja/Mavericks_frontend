@@ -25,6 +25,8 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleBasedRoute from "./RoleBasedRoute";
 
+import InvoicePage from "../pages/Billing/InvoicePage";
+
 const LoginPage = lazy(() =>
     import("../pages/Auth/LoginPage")
 );
@@ -200,6 +202,25 @@ function AppRouter() {
                             >
                                 <DashboardLayout>
                                     <CalendarPage />
+                                </DashboardLayout>
+                            </RoleBasedRoute>
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/billing"
+                    element={
+                        <ProtectedRoute>
+                            <RoleBasedRoute
+                                allowedRoles={[
+                                    "Admin",
+                                    "Provider",
+                                    "Nurse"
+                                ]}
+                            >
+                                <DashboardLayout>
+                                    <InvoicePage />
                                 </DashboardLayout>
                             </RoleBasedRoute>
                         </ProtectedRoute>

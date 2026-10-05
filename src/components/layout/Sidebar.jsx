@@ -98,6 +98,10 @@ function Sidebar() {
         roles.includes("Nurse") ||
         roles.includes("Patient") ||
         roles.includes("Pharmacist");
+    const canAccessBilling =
+        roles.includes("Admin") ||
+        roles.includes("Provider") ||
+        roles.includes("Nurse");
     const canAccessSecurity =
         roles.includes("Admin") ||
         roles.includes("Provider") ||
@@ -143,6 +147,12 @@ function Sidebar() {
                 {canAccessCalendar && (
                     <NavigationLink to="/calendar">
                         Calendar
+                    </NavigationLink>
+                )}
+
+                {canAccessBilling && (
+                    <NavigationLink to="/billing">
+                        Billing
                     </NavigationLink>
                 )}
 
