@@ -9,6 +9,8 @@ const SidebarContainer = styled.aside`
     padding: ${({ theme }) => theme.spacing.lg} ${({ theme }) => theme.spacing.md};
 
     background: ${({ theme }) => theme.colors.sidebar};
+
+    border-right: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 const SidebarTitle = styled.h2`
@@ -17,6 +19,8 @@ const SidebarTitle = styled.h2`
     color: ${({ theme }) => theme.colors.sidebarText};
 
     font-size: ${({ theme }) => theme.typography.small};
+    font-weight: 600;
+
     text-transform: uppercase;
     letter-spacing: 0.08em;
 `;
@@ -44,16 +48,21 @@ const NavigationLink = styled(NavLink)`
 
     transition:
         background 0.2s ease,
-        color 0.2s ease;
+        color 0.2s ease,
+        transform 0.2s ease;
 
     &:hover {
         background: ${({ theme }) => theme.colors.surfaceHover};
-        color: #ffffff;
+        color: ${({ theme }) => theme.colors.text};
+
+        transform: translateX(2px);
     }
 
     &.active {
         background: ${({ theme }) => theme.colors.sidebarActive};
         color: #ffffff;
+
+        font-weight: 600;
     }
 `;
 

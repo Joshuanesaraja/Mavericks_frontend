@@ -22,12 +22,16 @@ const PageTitle = styled.h1`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h1};
 `;
 
 const PageSubtitle = styled.p`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.body};
 `;
 
 const PatientCard = styled.section`
@@ -41,12 +45,52 @@ const PatientCard = styled.section`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
-const PatientDetails = styled.div`
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+const PatientCardHeader = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
     gap: ${({ theme }) => theme.spacing.md};
 
-    margin-bottom: ${({ theme }) => theme.spacing.xl};
+    margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const PatientCardTitle = styled.h2`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const PatientBadge = styled.span`
+    display: inline-flex;
+    align-items: center;
+
+    padding: 6px 12px;
+
+    border-radius: ${({ theme }) => theme.radius.pill};
+
+    background: ${({ theme }) => theme.colors.primary};
+    color: #ffffff;
+
+    font-size: ${({ theme }) => theme.typography.small};
+    font-weight: 600;
+`;
+
+const PatientDetails = styled.div`
+    display: grid;
+
+    grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+    );
+
+    gap: ${({ theme }) => theme.spacing.md};
+
+    @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 const DetailItem = styled.div`
@@ -54,11 +98,12 @@ const DetailItem = styled.div`
 
     background: ${({ theme }) => theme.colors.surfaceHover};
 
+    border: 1px solid ${({ theme }) => theme.colors.border};
     border-radius: ${({ theme }) => theme.radius.md};
 `;
 
 const DetailLabel = styled.p`
-    margin-bottom: ${({ theme }) => theme.spacing.xs};
+    margin: 0 0 ${({ theme }) => theme.spacing.xs};
 
     color: ${({ theme }) => theme.colors.textSecondary};
 
@@ -85,10 +130,24 @@ const FormSection = styled.section`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
-const SectionTitle = styled.h2`
+const SectionHeader = styled.div`
     margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const SectionTitle = styled.h2`
+    margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const SectionDescription = styled.p`
+    margin: ${({ theme }) => theme.spacing.xs} 0 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const Message = styled.div`
@@ -147,6 +206,16 @@ function PatientProfile() {
                 selectedPatient && (
                     <>
                         <PatientCard>
+                            <PatientCardHeader>
+                                <PatientCardTitle>
+                                    Patient Information
+                                </PatientCardTitle>
+
+                                <PatientBadge>
+                                    ID: {selectedPatient.id}
+                                </PatientBadge>
+                            </PatientCardHeader>
+
                             <PatientDetails>
                                 <DetailItem>
                                     <DetailLabel>
@@ -171,9 +240,15 @@ function PatientProfile() {
                         </PatientCard>
 
                         <FormSection>
-                            <SectionTitle>
-                                Edit Patient
-                            </SectionTitle>
+                            <SectionHeader>
+                                <SectionTitle>
+                                    Edit Patient
+                                </SectionTitle>
+
+                                <SectionDescription>
+                                    Update the patient's information below.
+                                </SectionDescription>
+                            </SectionHeader>
 
                             <PatientForm
                                 patient={selectedPatient}

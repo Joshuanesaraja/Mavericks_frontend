@@ -1,7 +1,7 @@
 const darkTheme = {
     colors: {
-        primary: "#14B8A6",
-        primaryHover: "#0D9488",
+        primary: "#3B82F6",
+        primaryHover: "#2563EB",
         secondary: "#60A5FA",
 
         background: "#0F172A",
@@ -21,7 +21,7 @@ const darkTheme = {
 
         sidebar: "#020617",
         sidebarText: "#CBD5E1",
-        sidebarActive: "#0F766E",
+        sidebarActive: "#2563EB",
 
         header: "#1E293B"
     },

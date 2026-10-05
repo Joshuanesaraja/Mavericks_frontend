@@ -6,8 +6,15 @@ function App() {
     const { loadProfile } = useAuth();
 
     useEffect(() => {
-        loadProfile();
+        const tenant = localStorage.getItem(
+            "tenant_subdomain"
+        );
+
+        if (tenant) {
+            loadProfile();
+        }
     }, [loadProfile]);
+
     return <AppRouter />;
 }
 

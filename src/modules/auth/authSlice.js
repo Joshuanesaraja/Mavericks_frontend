@@ -5,7 +5,8 @@ const initialState = {
     isAuthenticated: false,
     loading: false,
     error: null,
-    initialized: false
+    initialized: false,
+    registration: null
 };
 
 const authSlice = createSlice({
@@ -31,6 +32,22 @@ const authSlice = createSlice({
             state.isAuthenticated = false;
             state.error = action.payload;
             state.initialized = true;
+        },
+
+        registerRequest: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        registerSuccess: (state, action) => {
+            state.loading = false;
+            state.error = null;
+            state.registration = action.payload;
+        },
+
+        registerFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
         },
 
         getProfileRequest: (state) => {
@@ -95,6 +112,9 @@ const authSlice = createSlice({
 
 export const {
     loginRequest,
+    registerRequest,
+    registerSuccess,
+    registerFailure,
     loginSuccess,
     loginFailure,
     getProfileRequest,

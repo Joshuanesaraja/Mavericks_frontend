@@ -13,3 +13,6 @@ export const selectAuthError = (state) =>
 
 export const selectAuthInitialized = (state) =>
     state.auth.initialized;
+
+export const selectRegistration = (state) =>
+    state.auth.registration;

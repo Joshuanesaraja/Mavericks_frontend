@@ -7,6 +7,7 @@ import {
 import {
     getCsrfToken,
     login,
+    register,
     getProfile,
     logout,
     changePassword
@@ -16,6 +17,9 @@ import {
     loginRequest,
     loginSuccess,
     loginFailure,
+    registerRequest,
+    registerSuccess,
+    registerFailure,
     getProfileRequest,
     getProfileSuccess,
     getProfileFailure,
@@ -27,7 +31,10 @@ import {
     changePasswordFailure
 } from "./authSlice";
 
-import { setCsrfToken } from "../../services/axiosClient";
+import {
+    setCsrfToken,
+    setTenant
+} from "../../services/axiosClient";
 
 function getErrorMessage(error) {
     return (
@@ -55,11 +62,15 @@ function* handleGetCsrfToken() {
 
 function* handleLogin(action) {
     try {
+        const { subdomain, ...credentials } = action.payload;
+
+        setTenant(subdomain);
+
         yield call(handleGetCsrfToken);
 
         const response = yield call(
             login,
-            action.payload
+            credentials
         );
 
         const data =
@@ -74,6 +85,29 @@ function* handleLogin(action) {
     } catch (error) {
         yield put(
             loginFailure(
+                getErrorMessage(error)
+            )
+        );
+    }
+}
+
+function* handleRegister(action) {
+    try {
+        yield call(handleGetCsrfToken);
+
+        const response = yield call(
+            register,
+            action.payload
+        );
+
+        const data =
+            response?.data?.data ||
+            response?.data;
+
+        yield put(registerSuccess(data));
+    } catch (error) {
+        yield put(
+            registerFailure(
                 getErrorMessage(error)
             )
         );
@@ -148,6 +182,11 @@ export default function* authSaga() {
     yield takeLatest(
         loginRequest.type,
         handleLogin
+    );
+
+    yield takeLatest(
+        registerRequest.type,
+        handleRegister
     );
 
     yield takeLatest(

@@ -25,12 +25,16 @@ const PageTitle = styled.h1`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h1};
 `;
 
 const PageSubtitle = styled.p`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.body};
 `;
 
 const FormSection = styled.section`
@@ -44,28 +48,58 @@ const FormSection = styled.section`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
-const SectionTitle = styled.h2`
+const SectionHeader = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.xs};
+
     margin-bottom: ${({ theme }) => theme.spacing.lg};
+`;
+
+const SectionTitle = styled.h2`
+    margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const SectionDescription = styled.p`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const Form = styled.form`
     display: grid;
 
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+    );
 
     gap: ${({ theme }) => theme.spacing.md};
+
+    @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 const Field = styled.div`
     display: flex;
     flex-direction: column;
+
     gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const FullWidthField = styled(Field)`
     grid-column: 1 / -1;
+
+    @media (max-width: 700px) {
+        grid-column: auto;
+    }
 `;
 
 const Label = styled.label`
@@ -82,6 +116,17 @@ const FormActions = styled.div`
     grid-column: 1 / -1;
 
     padding-top: ${({ theme }) => theme.spacing.sm};
+
+    @media (max-width: 700px) {
+        grid-column: auto;
+    }
+`;
+
+const Section = styled.section`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const Message = styled.div`
@@ -104,22 +149,18 @@ const ErrorMessage = styled(Message)`
 `;
 
 const PrescriptionGrid = styled.div`
-    display: grid;
+    display: flex;
+    flex-direction: column;
 
-    grid-template-columns: repeat(
-        auto-fill,
-        minmax(280px, 1fr)
-    );
-
-    gap: ${({ theme }) => theme.spacing.lg};
+    gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const PrescriptionCard = styled.article`
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: space-between;
 
-    min-height: 220px;
+    gap: ${({ theme }) => theme.spacing.lg};
 
     padding: ${({ theme }) => theme.spacing.lg};
 
@@ -131,24 +172,49 @@ const PrescriptionCard = styled.article`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 
     transition:
-        transform 0.2s ease,
+        border-color 0.2s ease,
         box-shadow 0.2s ease;
 
     &:hover {
-        transform: translateY(-2px);
+        border-color: ${({ theme }) => theme.colors.primary};
+
         box-shadow: ${({ theme }) => theme.shadows.md};
+    }
+
+    @media (max-width: 700px) {
+        flex-direction: column;
+        align-items: stretch;
     }
 `;
 
 const PrescriptionDetails = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: ${({ theme }) => theme.spacing.sm};
+    display: grid;
+
+    grid-template-columns: repeat(
+        3,
+        minmax(120px, 1fr)
+    );
+
+    gap: ${({ theme }) => theme.spacing.lg};
+
+    flex: 1;
+
+    @media (max-width: 800px) {
+        grid-template-columns: repeat(
+            2,
+            minmax(120px, 1fr)
+        );
+    }
+
+    @media (max-width: 500px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 const DetailItem = styled.div`
     display: flex;
     flex-direction: column;
+
     gap: ${({ theme }) => theme.spacing.xs};
 `;
 
@@ -161,6 +227,9 @@ const DetailLabel = styled.span`
 
 const DetailValue = styled.span`
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.body};
+    font-weight: 500;
 `;
 
 const StatusBadge = styled.span`
@@ -173,9 +242,7 @@ const StatusBadge = styled.span`
 
     border-radius: ${({ theme }) => theme.radius.pill};
 
-    background: ${({ theme }) =>
-        theme.colors.warning};
-
+    background: ${({ theme }) => theme.colors.warning};
     color: #ffffff;
 
     font-size: ${({ theme }) => theme.typography.small};
@@ -185,11 +252,16 @@ const StatusBadge = styled.span`
 const CardActions = styled.div`
     display: flex;
     align-items: center;
+
     flex-wrap: wrap;
 
     gap: ${({ theme }) => theme.spacing.sm};
 
-    margin-top: ${({ theme }) => theme.spacing.lg};
+    flex-shrink: 0;
+
+    @media (max-width: 700px) {
+        width: 100%;
+    }
 `;
 
 const DetailsLink = styled(Link)`
@@ -281,16 +353,22 @@ function PrescriptionList() {
                 </PageTitle>
 
                 <PageSubtitle>
-                    Prescription Management
+                    Manage and view patient prescriptions
                 </PageSubtitle>
             </PageHeader>
 
             {(roles.includes("Admin") ||
                 roles.includes("Provider")) && (
                     <FormSection>
-                        <SectionTitle>
-                            Create Prescription
-                        </SectionTitle>
+                        <SectionHeader>
+                            <SectionTitle>
+                                Create Prescription
+                            </SectionTitle>
+
+                            <SectionDescription>
+                                Enter the prescription details below.
+                            </SectionDescription>
+                        </SectionHeader>
 
                         <Form
                             onSubmit={handleCreatePrescription}
@@ -443,82 +521,94 @@ function PrescriptionList() {
             {!loading &&
                 !error &&
                 prescriptions.length > 0 && (
-                    <PrescriptionGrid>
-                        {prescriptions.map(
-                            (prescription) => (
-                                <PrescriptionCard
-                                    key={prescription.id}
-                                >
-                                    <PrescriptionDetails>
-                                        <DetailItem>
-                                            <DetailLabel>
-                                                Prescription ID
-                                            </DetailLabel>
+                    <Section>
+                        <div>
+                            <SectionTitle>
+                                Prescription Records
+                            </SectionTitle>
 
-                                            <DetailValue>
-                                                {
-                                                    prescription.id
-                                                }
-                                            </DetailValue>
-                                        </DetailItem>
+                            <SectionDescription>
+                                View and manage prescription records.
+                            </SectionDescription>
+                        </div>
 
-                                        <DetailItem>
-                                            <DetailLabel>
-                                                Patient ID
-                                            </DetailLabel>
+                        <PrescriptionGrid>
+                            {prescriptions.map(
+                                (prescription) => (
+                                    <PrescriptionCard
+                                        key={prescription.id}
+                                    >
+                                        <PrescriptionDetails>
+                                            <DetailItem>
+                                                <DetailLabel>
+                                                    Prescription ID
+                                                </DetailLabel>
 
-                                            <DetailValue>
-                                                {
-                                                    prescription.patient_id
-                                                }
-                                            </DetailValue>
-                                        </DetailItem>
-
-                                        <DetailItem>
-                                            <DetailLabel>
-                                                Status
-                                            </DetailLabel>
-
-                                            <StatusBadge>
-                                                {
-                                                    prescription.status
-                                                }
-                                            </StatusBadge>
-                                        </DetailItem>
-                                    </PrescriptionDetails>
-
-                                    <CardActions>
-                                        <DetailsLink
-                                            to={`/prescriptions/detail/${prescription.id}`}
-                                        >
-                                            View Details
-                                        </DetailsLink>
-
-                                        {roles.includes(
-                                            "Pharmacist"
-                                        ) &&
-                                            prescription.status ===
-                                            "pending" && (
-                                                <Button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleStatusUpdate(
-                                                            prescription.id,
-                                                            "verified"
-                                                        )
+                                                <DetailValue>
+                                                    {
+                                                        prescription.id
                                                     }
-                                                    disabled={
-                                                        loading
+                                                </DetailValue>
+                                            </DetailItem>
+
+                                            <DetailItem>
+                                                <DetailLabel>
+                                                    Patient ID
+                                                </DetailLabel>
+
+                                                <DetailValue>
+                                                    {
+                                                        prescription.patient_id
                                                     }
-                                                >
-                                                    Verify
-                                                </Button>
-                                            )}
-                                    </CardActions>
-                                </PrescriptionCard>
-                            )
-                        )}
-                    </PrescriptionGrid>
+                                                </DetailValue>
+                                            </DetailItem>
+
+                                            <DetailItem>
+                                                <DetailLabel>
+                                                    Status
+                                                </DetailLabel>
+
+                                                <StatusBadge>
+                                                    {
+                                                        prescription.status
+                                                    }
+                                                </StatusBadge>
+                                            </DetailItem>
+                                        </PrescriptionDetails>
+
+                                        <CardActions>
+                                            <DetailsLink
+                                                to={`/prescriptions/detail/${prescription.id}`}
+                                            >
+                                                View Details
+                                            </DetailsLink>
+
+                                            {roles.includes(
+                                                "Pharmacist"
+                                            ) &&
+                                                prescription.status ===
+                                                "pending" && (
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            handleStatusUpdate(
+                                                                prescription.id,
+                                                                "verified"
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            loading
+                                                        }
+                                                    >
+                                                        Verify
+                                                    </Button>
+                                                )}
+                                        </CardActions>
+                                    </PrescriptionCard>
+                                )
+                            )}
+                        </PrescriptionGrid>
+                    </Section>
                 )}
         </PageContainer>
     );

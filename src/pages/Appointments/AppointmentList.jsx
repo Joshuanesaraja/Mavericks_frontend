@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import  useAppointments from "../../modules/appointments/hooks/useAppointments";
+
+import useAppointments from "../../modules/appointments/hooks/useAppointments";
 import AppointmentForm from "../../components/forms/AppointmentForm";
 import Button from "../../components/common/Button";
 import Loader from "../../components/common/Loader";
@@ -9,22 +10,16 @@ import Table from "../../components/common/Table";
 
 const PageContainer = styled.div`
     display: flex;
-
     flex-direction: column;
-
-    gap: ${({ theme }) =>
-        theme.spacing.xl};
+    gap: ${({ theme }) => theme.spacing.xl};
 `;
 
 const PageHeader = styled.div`
     display: flex;
-
     align-items: flex-start;
-
     justify-content: space-between;
 
-    gap: ${({ theme }) =>
-        theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
 
     @media (max-width: 700px) {
         flex-direction: column;
@@ -34,303 +29,260 @@ const PageHeader = styled.div`
 const PageTitle = styled.h1`
     margin: 0;
 
-    color:
-        ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h1};
 `;
 
 const PageSubtitle = styled.p`
-    margin:
-        ${({ theme }) => theme.spacing.xs}
-        0 0;
+    margin: ${({ theme }) => theme.spacing.xs} 0 0;
 
-    color:
-        ${({ theme }) =>
-            theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.body};
 `;
 
 const HeaderActions = styled.div`
     display: flex;
+    align-items: center;
 
-    gap: ${({ theme }) =>
-        theme.spacing.sm};
+    gap: ${({ theme }) => theme.spacing.sm};
 
     flex-wrap: wrap;
 `;
 
 const Section = styled.section`
     display: flex;
-
     flex-direction: column;
 
-    gap: ${({ theme }) =>
-        theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
 
-    padding:
-        ${({ theme }) => theme.spacing.xl};
+    padding: ${({ theme }) => theme.spacing.xl};
 
-    background:
-        ${({ theme }) => theme.colors.surface};
+    background: ${({ theme }) => theme.colors.surface};
 
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radius.lg};
 
-    border-radius:
-        ${({ theme }) => theme.radius.lg};
-
-    box-shadow:
-        ${({ theme }) => theme.shadows.sm};
+    box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
 const SectionHeader = styled.div`
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
 
-    gap: ${({ theme }) =>
-        theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
+`;
+
+const SectionHeading = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const SectionTitle = styled.h2`
     margin: 0;
 
-    color:
-        ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const SectionDescription = styled.p`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const UpcomingGrid = styled.div`
     display: grid;
 
-    grid-template-columns:
-        repeat(
-            auto-fit,
-            minmax(260px, 1fr)
-        );
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(260px, 1fr)
+    );
 
-    gap: ${({ theme }) =>
-        theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const UpcomingCard = styled.article`
     display: flex;
-
     flex-direction: column;
 
-    gap: ${({ theme }) =>
-        theme.spacing.md};
+    min-height: 190px;
 
-    padding:
-        ${({ theme }) => theme.spacing.lg};
+    gap: ${({ theme }) => theme.spacing.md};
 
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
+    padding: ${({ theme }) => theme.spacing.lg};
 
-    border-radius:
-        ${({ theme }) => theme.radius.md};
+    background: ${({ theme }) => theme.colors.surface};
 
-    background:
-        ${({ theme }) =>
-            theme.colors.surfaceHover};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radius.md};
+
+    box-shadow: ${({ theme }) => theme.shadows.sm};
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+    &:hover {
+        transform: translateY(-2px);
+
+        border-color: ${({ theme }) => theme.colors.primary};
+
+        box-shadow: ${({ theme }) => theme.shadows.md};
+    }
 `;
 
 const AppointmentHeading = styled.div`
     display: flex;
-
     align-items: flex-start;
-
     justify-content: space-between;
 
-    gap: ${({ theme }) =>
-        theme.spacing.sm};
+    gap: ${({ theme }) => theme.spacing.sm};
 `;
 
 const AppointmentName = styled.h3`
     margin: 0;
 
-    color:
-        ${({ theme }) =>
-            theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+
+    font-size: 16px;
+    font-weight: 600;
 `;
 
 const AppointmentMeta = styled.div`
     display: flex;
-
     flex-direction: column;
 
-    gap: ${({ theme }) =>
-        theme.spacing.xs};
+    gap: ${({ theme }) => theme.spacing.xs};
 
-    color:
-        ${({ theme }) =>
-            theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
 
-    font-size:
-        ${({ theme }) =>
-            theme.typography.small};
+    font-size: ${({ theme }) => theme.typography.small};
+
+    line-height: 1.5;
 `;
 
 const StatusBadge = styled.span`
     display: inline-flex;
-
     align-items: center;
-
     width: fit-content;
 
-    padding:
-        5px 10px;
+    padding: 5px 10px;
 
     border-radius:
         ${({ theme }) =>
-            theme.radius.pill};
+        theme.radius.pill};
 
-    background: ${({ theme, status }) => {
-        if (
-            status === "completed"
-        ) {
+    background: ${({ theme, $status }) => {
+        if ($status === "completed") {
             return "rgba(22, 163, 74, 0.12)";
         }
 
-        if (
-            status === "cancelled"
-        ) {
+        if ($status === "cancelled") {
             return "rgba(220, 38, 38, 0.12)";
         }
 
-        if (
-            status === "confirmed"
-        ) {
+        if ($status === "confirmed") {
             return "rgba(37, 99, 235, 0.12)";
         }
 
-        if (
-            status === "no-show"
-        ) {
+        if ($status === "no-show") {
             return "rgba(217, 119, 6, 0.12)";
         }
 
         return "rgba(15, 118, 110, 0.12)";
     }};
 
-    color: ${({ theme, status }) => {
-        if (
-            status === "completed"
-        ) {
+    color: ${({ theme, $status }) => {
+        if ($status === "completed") {
             return theme.colors.success;
         }
 
-        if (
-            status === "cancelled"
-        ) {
+        if ($status === "cancelled") {
             return theme.colors.danger;
         }
 
-        if (
-            status === "confirmed"
-        ) {
+        if ($status === "confirmed") {
             return theme.colors.info;
         }
 
-        if (
-            status === "no-show"
-        ) {
+        if ($status === "no-show") {
             return theme.colors.warning;
         }
 
         return theme.colors.primary;
     }};
-
-    font-size:
-        ${({ theme }) =>
-            theme.typography.small};
-
-    font-weight: 600;
-
-    text-transform: capitalize;
 `;
 
 const CardActions = styled.div`
     display: flex;
+    align-items: center;
 
-    gap: ${({ theme }) =>
-        theme.spacing.sm};
+    gap: ${({ theme }) => theme.spacing.sm};
 
     flex-wrap: wrap;
+
+    margin-top: auto;
 `;
 
 const OutlineButton = styled(Button)`
     background: transparent;
 
-    border:
-        1px solid
-        ${({ theme }) =>
-            theme.colors.primary};
+    border: 1px solid ${({ theme }) => theme.colors.primary};
 
-    color:
-        ${({ theme }) =>
-            theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
 
     &:hover:not(:disabled) {
-        background:
-            ${({ theme }) =>
-                theme.colors.primary};
+        background: ${({ theme }) => theme.colors.primary};
 
         color: #ffffff;
     }
 `;
 
 const DangerButton = styled(Button)`
-    background:
-        ${({ theme }) =>
-            theme.colors.danger};
+    background: ${({ theme }) => theme.colors.danger};
 
     &:hover:not(:disabled) {
-        background:
-            #b91c1c;
+        background: #b91c1c;
     }
 `;
 
 const Message = styled.div`
-    padding:
-        ${({ theme }) => theme.spacing.lg};
+    padding: ${({ theme }) => theme.spacing.lg};
 
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
+    border: 1px solid ${({ theme }) => theme.colors.border};
 
-    border-radius:
-        ${({ theme }) => theme.radius.md};
+    border-radius: ${({ theme }) => theme.radius.md};
 
-    color:
-        ${({ theme }) =>
-            theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
 
-    background:
-        ${({ theme }) => theme.colors.surface};
+    background: ${({ theme }) => theme.colors.surfaceHover};
 
     text-align: center;
 `;
 
 const ErrorMessage = styled(Message)`
-    border-color:
-        ${({ theme }) =>
-            theme.colors.danger};
+    border-color: ${({ theme }) => theme.colors.danger};
 
-    color:
-        ${({ theme }) =>
-            theme.colors.danger};
+    color: ${({ theme }) => theme.colors.danger};
 
-    background:
-        rgba(220, 38, 38, 0.06);
+    background: rgba(220, 38, 38, 0.06);
 `;
 
 const TableActions = styled.div`
     display: flex;
 
-    gap: ${({ theme }) =>
-        theme.spacing.xs};
+    align-items: center;
+
+    gap: ${({ theme }) => theme.spacing.xs};
 
     flex-wrap: wrap;
 `;
@@ -338,33 +290,28 @@ const TableActions = styled.div`
 const SmallButton = styled(Button)`
     min-height: 34px;
 
-    padding:
-        7px 11px;
+    padding: 7px 11px;
 
-    font-size:
-        ${({ theme }) =>
-            theme.typography.small};
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const DangerSmallButton = styled(SmallButton)`
-    background:
-        ${({ theme }) =>
-            theme.colors.danger};
+    background: ${({ theme }) => theme.colors.danger};
 
     &:hover:not(:disabled) {
-        background:
-            #b91c1c;
+        background: #b91c1c;
     }
 `;
 
 const DetailsGrid = styled.div`
     display: grid;
 
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        2,
+        minmax(0, 1fr)
+    );
 
-    gap:
-        ${({ theme }) => theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
 
     @media (max-width: 600px) {
         grid-template-columns: 1fr;
@@ -372,42 +319,91 @@ const DetailsGrid = styled.div`
 `;
 
 const DetailItem = styled.div`
-    padding:
-        ${({ theme }) => theme.spacing.md};
+    padding: ${({ theme }) => theme.spacing.md};
 
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
+    border: 1px solid ${({ theme }) => theme.colors.border};
 
-    border-radius:
-        ${({ theme }) => theme.radius.md};
+    border-radius: ${({ theme }) => theme.radius.md};
 
-    background:
-        ${({ theme }) =>
-            theme.colors.surfaceHover};
+    background: ${({ theme }) => theme.colors.surfaceHover};
 `;
 
 const DetailLabel = styled.div`
-    margin-bottom:
-        ${({ theme }) => theme.spacing.xs};
+    margin-bottom: ${({ theme }) => theme.spacing.xs};
 
-    color:
-        ${({ theme }) =>
-            theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
 
-    font-size:
-        ${({ theme }) =>
-            theme.typography.small};
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const DetailValue = styled.div`
-    color:
-        ${({ theme }) =>
-            theme.colors.text};
+    color: ${({ theme }) => theme.colors.text};
 
     font-weight: 600;
 
     word-break: break-word;
+`;
+
+const CancelContent = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.md};
+`;
+
+const CancelText = styled.p`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.text};
+`;
+
+const CancelAppointmentSummary = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.xs};
+
+    padding: ${({ theme }) => theme.spacing.md};
+
+    border: 1px solid ${({ theme }) => theme.colors.border};
+
+    border-radius: ${({ theme }) => theme.radius.md};
+
+    background: ${({ theme }) => theme.colors.surfaceHover};
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const CancelInput = styled.input`
+    min-height: 40px;
+
+    padding: 10px 12px;
+
+    border: 1px solid ${({ theme }) => theme.colors.border};
+
+    border-radius: ${({ theme }) => theme.radius.md};
+
+    background: ${({ theme }) => theme.colors.surface};
+
+    color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.body};
+
+    &:focus {
+        border-color: ${({ theme }) => theme.colors.primary};
+
+        outline: none;
+    }
+`;
+
+const CancelActions = styled.div`
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: ${({ theme }) => theme.spacing.sm};
+
+    flex-wrap: wrap;
 `;
 
 function formatDateTime(value) {
@@ -416,10 +412,7 @@ function formatDateTime(value) {
     }
 
     const date = new Date(
-        String(value).replace(
-            " ",
-            "T"
-        )
+        String(value).replace(" ", "T")
     );
 
     if (Number.isNaN(date.getTime())) {
@@ -452,23 +445,18 @@ function AppointmentList() {
         appointments,
         upcoming,
         selectedAppointment,
-
         loading,
         upcomingLoading,
         creating,
         updating,
         cancelling,
-
         error,
         successMessage,
-
         getAppointments,
         getUpcomingAppointments,
         getAppointment,
-
         cancelAppointment,
         updateAppointmentStatus,
-
         clearError,
         clearSuccess,
         clearSelected
@@ -563,9 +551,7 @@ function AppointmentList() {
     const openCreate = () => {
         clearError();
 
-        setEditingAppointment(
-            null
-        );
+        setEditingAppointment(null);
 
         setFormOpen(true);
     };
@@ -592,6 +578,7 @@ function AppointmentList() {
 
     const closeDetails = () => {
         setDetailsOpen(false);
+
         clearSelected();
     };
 
@@ -622,9 +609,7 @@ function AppointmentList() {
     };
 
     const handleCancel = () => {
-        if (
-            !appointmentToCancel?.id
-        ) {
+        if (!appointmentToCancel?.id) {
             return;
         }
 
@@ -640,7 +625,9 @@ function AppointmentList() {
             appointmentToCancel
         ) {
             setCancelOpen(false);
+
             setAppointmentToCancel(null);
+
             setCancelReason("");
         }
     }, [
@@ -657,9 +644,8 @@ function AppointmentList() {
                     </PageTitle>
 
                     <PageSubtitle>
-                        Create, reschedule,
-                        review and manage
-                        appointments.
+                        Create, reschedule, review and
+                        manage appointments.
                     </PageSubtitle>
                 </div>
 
@@ -692,9 +678,16 @@ function AppointmentList() {
 
             <Section>
                 <SectionHeader>
-                    <SectionTitle>
-                        Upcoming Appointments
-                    </SectionTitle>
+                    <SectionHeading>
+                        <SectionTitle>
+                            Upcoming Appointments
+                        </SectionTitle>
+
+                        <SectionDescription>
+                            View your upcoming scheduled
+                            appointments.
+                        </SectionDescription>
+                    </SectionHeading>
                 </SectionHeader>
 
                 {upcomingLoading &&
@@ -705,8 +698,8 @@ function AppointmentList() {
                 {!upcomingLoading &&
                     upcoming.length === 0 && (
                         <Message>
-                            No upcoming
-                            appointments found.
+                            No upcoming appointments
+                            found.
                         </Message>
                     )}
 
@@ -715,9 +708,7 @@ function AppointmentList() {
                         {upcoming
                             .slice(0, 6)
                             .map(
-                                (
-                                    appointment
-                                ) => (
+                                (appointment) => (
                                     <UpcomingCard
                                         key={
                                             appointment.id
@@ -730,7 +721,7 @@ function AppointmentList() {
                                             </AppointmentName>
 
                                             <StatusBadge
-                                                status={
+                                                $status={
                                                     appointment.status
                                                 }
                                             >
@@ -762,7 +753,9 @@ function AppointmentList() {
 
                                             {appointment.reason && (
                                                 <span>
-                                                    {appointment.reason}
+                                                    {
+                                                        appointment.reason
+                                                    }
                                                 </span>
                                             )}
                                         </AppointmentMeta>
@@ -803,9 +796,15 @@ function AppointmentList() {
 
             <Section>
                 <SectionHeader>
-                    <SectionTitle>
-                        Appointment List
-                    </SectionTitle>
+                    <SectionHeading>
+                        <SectionTitle>
+                            Appointment List
+                        </SectionTitle>
+
+                        <SectionDescription>
+                            View and manage all appointments.
+                        </SectionDescription>
+                    </SectionHeading>
                 </SectionHeader>
 
                 {loading &&
@@ -853,7 +852,7 @@ function AppointmentList() {
 
                                 <Cell>
                                     <StatusBadge
-                                        status={
+                                        $status={
                                             appointment.status
                                         }
                                     >
@@ -893,35 +892,35 @@ function AppointmentList() {
 
                                         {appointment.status !==
                                             "cancelled" && (
-                                            <DangerSmallButton
-                                                type="button"
-                                                onClick={() =>
-                                                    openCancel(
-                                                        appointment
-                                                    )
-                                                }
-                                            >
-                                                Cancel
-                                            </DangerSmallButton>
-                                        )}
+                                                <DangerSmallButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        openCancel(
+                                                            appointment
+                                                        )
+                                                    }
+                                                >
+                                                    Cancel
+                                                </DangerSmallButton>
+                                            )}
 
                                         {appointment.status ===
                                             "scheduled" && (
-                                            <SmallButton
-                                                type="button"
-                                                onClick={() =>
-                                                    updateAppointmentStatus(
-                                                        appointment.id,
-                                                        "confirmed"
-                                                    )
-                                                }
-                                                disabled={
-                                                    updating
-                                                }
-                                            >
-                                                Confirm
-                                            </SmallButton>
-                                        )}
+                                                <SmallButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        updateAppointmentStatus(
+                                                            appointment.id,
+                                                            "confirmed"
+                                                        )
+                                                    }
+                                                    disabled={
+                                                        updating
+                                                    }
+                                                >
+                                                    Confirm
+                                                </SmallButton>
+                                            )}
                                     </TableActions>
                                 </Cell>
                             </>
@@ -933,9 +932,16 @@ function AppointmentList() {
             <Modal
                 isOpen={formOpen}
                 onClose={() => {
-                    if (!creating && !updating) {
+                    if (
+                        !creating &&
+                        !updating
+                    ) {
                         setFormOpen(false);
-                        setEditingAppointment(null);
+
+                        setEditingAppointment(
+                            null
+                        );
+
                         clearError();
                     }
                 }}
@@ -951,7 +957,11 @@ function AppointmentList() {
                     }
                     onCancel={() => {
                         setFormOpen(false);
-                        setEditingAppointment(null);
+
+                        setEditingAppointment(
+                            null
+                        );
+
                         clearError();
                     }}
                 />
@@ -1048,8 +1058,8 @@ function AppointmentList() {
             >
                 <CancelContent>
                     <CancelText>
-                        Are you sure you want to
-                        cancel this appointment?
+                        Are you sure you want to cancel
+                        this appointment?
                     </CancelText>
 
                     {appointmentToCancel && (
@@ -1103,89 +1113,4 @@ function AppointmentList() {
     );
 }
 
-const CancelContent = styled.div`
-    display: flex;
-
-    flex-direction: column;
-
-    gap: ${({ theme }) =>
-        theme.spacing.md};
-`;
-
-const CancelText = styled.p`
-    margin: 0;
-
-    color:
-        ${({ theme }) =>
-            theme.colors.text};
-`;
-
-const CancelAppointmentSummary = styled.div`
-    display: flex;
-
-    flex-direction: column;
-
-    gap: ${({ theme }) =>
-        theme.spacing.xs};
-
-    padding:
-        ${({ theme }) => theme.spacing.md};
-
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
-
-    border-radius:
-        ${({ theme }) => theme.radius.md};
-
-    background:
-        ${({ theme }) =>
-            theme.colors.surfaceHover};
-
-    color:
-        ${({ theme }) =>
-            theme.colors.textSecondary};
-`;
-
-const CancelInput = styled.input`
-    min-height: 40px;
-
-    padding: 10px 12px;
-
-    border:
-        1px solid
-        ${({ theme }) => theme.colors.border};
-
-    border-radius:
-        ${({ theme }) => theme.radius.md};
-
-    background:
-        ${({ theme }) => theme.colors.surface};
-
-    color:
-        ${({ theme }) => theme.colors.text};
-
-    font-size:
-        ${({ theme }) =>
-            theme.typography.body};
-
-    &:focus {
-        border-color:
-            ${({ theme }) =>
-                theme.colors.primary};
-
-        outline: none;
-    }
-`;
-
-const CancelActions = styled.div`
-    display: flex;
-
-    justify-content: flex-end;
-
-    gap: ${({ theme }) =>
-        theme.spacing.sm};
-
-    flex-wrap: wrap;
-`;
 export default AppointmentList;

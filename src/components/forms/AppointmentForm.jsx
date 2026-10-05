@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+
 import useAppointments from "../../modules/appointments/hooks/useAppointments";
 import Input from "../common/Input";
 import Button from "../common/Button";
@@ -26,6 +27,7 @@ const Form = styled.form`
 const Field = styled.div`
     display: flex;
     flex-direction: column;
+
     gap: ${({ theme }) => theme.spacing.xs};
 `;
 
@@ -45,6 +47,7 @@ const Label = styled.label`
 
 const Select = styled.select`
     width: 100%;
+
     min-height: 40px;
 
     padding: 10px 12px;
@@ -61,6 +64,10 @@ const Select = styled.select`
     color:
         ${({ theme }) => theme.colors.text};
 
+    font-family:
+        ${({ theme }) =>
+        theme.typography.fontFamily};
+
     font-size:
         ${({ theme }) => theme.typography.body};
 
@@ -68,17 +75,13 @@ const Select = styled.select`
         border-color:
             ${({ theme }) => theme.colors.primary};
 
-        box-shadow:
-            0 0 0 3px
-            rgba(15, 118, 110, 0.12);
-
         outline: none;
     }
 
     &:disabled {
         background:
             ${({ theme }) =>
-                theme.colors.surfaceHover};
+        theme.colors.surfaceHover};
 
         cursor: not-allowed;
 
@@ -109,7 +112,7 @@ const TextArea = styled.textarea`
 
     font-family:
         ${({ theme }) =>
-            theme.typography.fontFamily};
+        theme.typography.fontFamily};
 
     font-size:
         ${({ theme }) => theme.typography.body};
@@ -118,11 +121,17 @@ const TextArea = styled.textarea`
         border-color:
             ${({ theme }) => theme.colors.primary};
 
-        box-shadow:
-            0 0 0 3px
-            rgba(15, 118, 110, 0.12);
-
         outline: none;
+    }
+
+    &:disabled {
+        background:
+            ${({ theme }) =>
+        theme.colors.surfaceHover};
+
+        cursor: not-allowed;
+
+        opacity: 0.7;
     }
 `;
 

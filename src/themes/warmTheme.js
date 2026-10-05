@@ -1,7 +1,7 @@
 const warmTheme = {
     colors: {
-        primary: "#0F766E",
-        primaryHover: "#0D5F59",
+        primary: "#2563EB",
+        primaryHover: "#1D4ED8",
         secondary: "#2563EB",
 
         background: "#F8FAFC",
@@ -19,9 +19,9 @@ const warmTheme = {
         danger: "#DC2626",
         info: "#2563EB",
 
-        sidebar: "#0F172A",
-        sidebarText: "#CBD5E1",
-        sidebarActive: "#0F766E",
+        sidebar: "#F1F5F9",
+        sidebarText: "#475569",
+        sidebarActive: "#2563EB",
 
         header: "#FFFFFF"
     },

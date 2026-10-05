@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import Button from "../common/Button";
 import { useAuth } from "../../modules/auth/hooks/useAuth";
+import { useTheme } from "../../context/ThemeContext";
 
 const HeaderContainer = styled.header`
     height: ${({ theme }) => theme.layout.headerHeight};
@@ -38,36 +39,10 @@ const UserSection = styled.div`
     gap: ${({ theme }) => theme.spacing.md};
 `;
 
-const UserInfo = styled.div`
-    text-align: right;
-`;
-
-const UserName = styled.p`
-    margin: 0;
-
-    color: ${({ theme }) => theme.colors.text};
-    font-weight: 600;
-`;
-
-const UserRole = styled.p`
-    margin: 0;
-
-    color: ${({ theme }) => theme.colors.textSecondary};
-    font-size: ${({ theme }) => theme.typography.small};
-`;
-
 function Header() {
-    const { user, logout, loading } = useAuth();
+    const { logout, loading } = useAuth();
+    const { themeMode, toggleTheme } = useTheme();
 
-    const userName =
-        user?.name ||
-        user?.username ||
-        user?.email ||
-        "User";
-
-    const userRole =
-        user?.roles?.join(", ") ||
-        "User";
 
     return (
         <HeaderContainer>
@@ -76,10 +51,14 @@ function Header() {
             </Brand>
 
             <UserSection>
-                <UserInfo>
-                    <UserName>{userName}</UserName>
-                    <UserRole>{userRole}</UserRole>
-                </UserInfo>
+                <Button
+                    type="button"
+                    onClick={toggleTheme}
+                >
+                    {themeMode === "warm"
+                        ? "Dark Mode"
+                        : "Warm Mode"}
+                </Button>
 
                 <Button
                     type="button"

@@ -15,15 +15,24 @@ const PageContainer = styled.div`
 
 const PageHeader = styled.div`
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: ${({ theme }) => theme.spacing.md};
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const PageTitle = styled.h1`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h1};
+`;
+
+const PageDescription = styled.p`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.body};
 `;
 
 const FormSection = styled.section`
@@ -37,10 +46,32 @@ const FormSection = styled.section`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 `;
 
+const Section = styled.section`
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.md};
+`;
+
+const SectionHeader = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+`;
+
 const SectionTitle = styled.h2`
-    margin-bottom: ${({ theme }) => theme.spacing.lg};
+    margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const SectionDescription = styled.p`
+    margin: ${({ theme }) => theme.spacing.xs} 0 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const Message = styled.div`
@@ -63,21 +94,18 @@ const ErrorMessage = styled(Message)`
 `;
 
 const PatientGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(
-        auto-fill,
-        minmax(280px, 1fr)
-    );
-
-    gap: ${({ theme }) => theme.spacing.lg};
+    display: flex;
+    flex-direction: column;
+    gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const PatientCard = styled.article`
     display: flex;
-    flex-direction: column;
+    align-items: center;
     justify-content: space-between;
 
-    min-height: 180px;
+    gap: ${({ theme }) => theme.spacing.lg};
+
     padding: ${({ theme }) => theme.spacing.lg};
 
     background: ${({ theme }) => theme.colors.surface};
@@ -88,29 +116,41 @@ const PatientCard = styled.article`
     box-shadow: ${({ theme }) => theme.shadows.sm};
 
     transition:
-        transform 0.2s ease,
+        border-color 0.2s ease,
         box-shadow 0.2s ease;
 
     &:hover {
-        transform: translateY(-2px);
+        border-color: ${({ theme }) => theme.colors.primary};
+
         box-shadow: ${({ theme }) => theme.shadows.md};
+    }
+
+    @media (max-width: 700px) {
+        flex-direction: column;
+        align-items: stretch;
     }
 `;
 
 const PatientContent = styled.div`
-    margin-bottom: ${({ theme }) => theme.spacing.lg};
+    min-width: 0;
+    flex: 1;
 `;
 
 const PatientTitle = styled.h3`
-    margin-bottom: ${({ theme }) => theme.spacing.sm};
+    margin: 0 0 ${({ theme }) => theme.spacing.xs};
 
     color: ${({ theme }) => theme.colors.primary};
+
+    font-size: 16px;
+    font-weight: 600;
 `;
 
 const PatientData = styled.p`
     margin: 0;
 
-    color: ${({ theme }) => theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.body};
 
     word-break: break-word;
 `;
@@ -118,9 +158,14 @@ const PatientData = styled.p`
 const PatientActions = styled.div`
     display: flex;
     align-items: center;
+
     gap: ${({ theme }) => theme.spacing.sm};
 
-    flex-wrap: wrap;
+    flex-shrink: 0;
+
+    @media (max-width: 700px) {
+        width: 100%;
+    }
 `;
 
 const ViewLink = styled(Link)`
@@ -169,6 +214,10 @@ function PatientList() {
         <PageContainer>
             <PageHeader>
                 <PageTitle>Patients</PageTitle>
+
+                <PageDescription>
+                    Manage and view patient records
+                </PageDescription>
             </PageHeader>
 
             <FormSection>
@@ -198,40 +247,54 @@ function PatientList() {
             {!loading &&
                 !error &&
                 patients.length > 0 && (
-                    <PatientGrid>
-                        {patients.map((patient) => (
-                            <PatientCard key={patient.id}>
-                                <PatientContent>
-                                    <PatientTitle>
-                                        Patient
-                                    </PatientTitle>
+                    <Section>
+                        <SectionHeader>
+                            <div>
+                                <SectionTitle>
+                                    Patient Records
+                                </SectionTitle>
 
-                                    <PatientData>
-                                        {patient.encrypted_data}
-                                    </PatientData>
-                                </PatientContent>
+                                <SectionDescription>
+                                    View and manage your patients
+                                </SectionDescription>
+                            </div>
+                        </SectionHeader>
 
-                                <PatientActions>
-                                    <ViewLink
-                                        to={`/patients/${patient.id}`}
-                                    >
-                                        View / Edit
-                                    </ViewLink>
+                        <PatientGrid>
+                            {patients.map((patient) => (
+                                <PatientCard key={patient.id}>
+                                    <PatientContent>
+                                        <PatientTitle>
+                                            Patient
+                                        </PatientTitle>
 
-                                    <Button
-                                        type="button"
-                                        onClick={() =>
-                                            removePatient(
-                                                patient.id
-                                            )
-                                        }
-                                    >
-                                        Delete
-                                    </Button>
-                                </PatientActions>
-                            </PatientCard>
-                        ))}
-                    </PatientGrid>
+                                        <PatientData>
+                                            {patient.encrypted_data}
+                                        </PatientData>
+                                    </PatientContent>
+
+                                    <PatientActions>
+                                        <ViewLink
+                                            to={`/patients/${patient.id}`}
+                                        >
+                                            View / Edit
+                                        </ViewLink>
+
+                                        <Button
+                                            type="button"
+                                            onClick={() =>
+                                                removePatient(
+                                                    patient.id
+                                                )
+                                            }
+                                        >
+                                            Delete
+                                        </Button>
+                                    </PatientActions>
+                                </PatientCard>
+                            ))}
+                        </PatientGrid>
+                    </Section>
                 )}
         </PageContainer>
     );

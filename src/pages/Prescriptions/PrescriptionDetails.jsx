@@ -21,12 +21,16 @@ const PageTitle = styled.h1`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h1};
 `;
 
 const PageSubtitle = styled.p`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.body};
 `;
 
 const DetailsCard = styled.section`
@@ -43,11 +47,18 @@ const DetailsCard = styled.section`
 const BasicDetails = styled.div`
     display: grid;
 
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        3,
+        minmax(0, 1fr)
+    );
 
     gap: ${({ theme }) => theme.spacing.md};
 
     margin-bottom: ${({ theme }) => theme.spacing.xl};
+
+    @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 const DetailItem = styled.div`
@@ -55,11 +66,13 @@ const DetailItem = styled.div`
 
     background: ${({ theme }) => theme.colors.surfaceHover};
 
+    border: 1px solid ${({ theme }) => theme.colors.border};
+
     border-radius: ${({ theme }) => theme.radius.md};
 `;
 
 const DetailLabel = styled.p`
-    margin-bottom: ${({ theme }) => theme.spacing.xs};
+    margin: 0 0 ${({ theme }) => theme.spacing.xs};
 
     color: ${({ theme }) => theme.colors.textSecondary};
 
@@ -73,6 +86,7 @@ const DetailValue = styled.p`
     color: ${({ theme }) => theme.colors.text};
 
     font-size: ${({ theme }) => theme.typography.body};
+    font-weight: 500;
 `;
 
 const StatusBadge = styled.span`
@@ -85,7 +99,7 @@ const StatusBadge = styled.span`
 
     border-radius: ${({ theme }) => theme.radius.pill};
 
-    background: ${({ theme }) => theme.colors.warning};
+    background: ${({ theme }) => theme.colors.primary};
     color: #ffffff;
 
     font-size: ${({ theme }) => theme.typography.small};
@@ -93,18 +107,41 @@ const StatusBadge = styled.span`
 `;
 
 const Section = styled.section`
-    margin-top: ${({ theme }) => theme.spacing.lg};
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.md};
+
+    margin-top: ${({ theme }) => theme.spacing.xl};
+`;
+
+const SectionHeader = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) => theme.spacing.xs};
 `;
 
 const SectionTitle = styled.h2`
-    margin-bottom: ${({ theme }) => theme.spacing.md};
+    margin: 0;
 
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.h2};
+`;
+
+const SectionDescription = styled.p`
+    margin: 0;
+
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
 `;
 
 const MedicationList = styled.div`
     display: flex;
     flex-direction: column;
+
     gap: ${({ theme }) => theme.spacing.md};
 `;
 
@@ -117,6 +154,16 @@ const MedicationCard = styled.div`
     border-radius: ${({ theme }) => theme.radius.md};
 
     box-shadow: ${({ theme }) => theme.shadows.sm};
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+    &:hover {
+        border-color: ${({ theme }) => theme.colors.primary};
+
+        box-shadow: ${({ theme }) => theme.shadows.md};
+    }
 `;
 
 const MedicationHeader = styled.div`
@@ -131,20 +178,37 @@ const MedicineName = styled.h3`
     margin: 0;
 
     color: ${({ theme }) => theme.colors.primary};
+
+    font-size: 18px;
+    font-weight: 600;
 `;
 
 const MedicationGrid = styled.div`
     display: grid;
 
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        3,
+        minmax(0, 1fr)
+    );
 
     gap: ${({ theme }) => theme.spacing.md};
+
+    @media (max-width: 700px) {
+        grid-template-columns: 1fr;
+    }
 `;
 
 const MedicationItem = styled.div`
     display: flex;
     flex-direction: column;
+
     gap: ${({ theme }) => theme.spacing.xs};
+
+    padding: ${({ theme }) => theme.spacing.md};
+
+    background: ${({ theme }) => theme.colors.surfaceHover};
+
+    border-radius: ${({ theme }) => theme.radius.md};
 `;
 
 const MedicationLabel = styled.span`
@@ -156,6 +220,9 @@ const MedicationLabel = styled.span`
 
 const MedicationValue = styled.span`
     color: ${({ theme }) => theme.colors.text};
+
+    font-size: ${({ theme }) => theme.typography.body};
+    font-weight: 500;
 `;
 
 const InstructionsCard = styled.div`
@@ -180,6 +247,12 @@ const InstructionsText = styled.p`
 const EmptyMessage = styled.p`
     margin: 0;
 
+    padding: ${({ theme }) => theme.spacing.lg};
+
+    background: ${({ theme }) => theme.colors.surfaceHover};
+
+    border-radius: ${({ theme }) => theme.radius.md};
+
     color: ${({ theme }) => theme.colors.textSecondary};
 `;
 
@@ -189,6 +262,7 @@ const BackLink = styled(Link)`
     justify-content: center;
 
     width: fit-content;
+
     min-height: 40px;
 
     padding: 10px 18px;
@@ -285,9 +359,7 @@ function PrescriptionDetails() {
                                     </DetailLabel>
 
                                     <DetailValue>
-                                        {
-                                            selectedPrescription.id
-                                        }
+                                        {selectedPrescription.id}
                                     </DetailValue>
                                 </DetailItem>
 
@@ -317,14 +389,24 @@ function PrescriptionDetails() {
                             </BasicDetails>
 
                             <Section>
-                                <SectionTitle>
-                                    Medications
-                                </SectionTitle>
+                                <SectionHeader>
+                                    <SectionTitle>
+                                        Medications
+                                    </SectionTitle>
+
+                                    <SectionDescription>
+                                        Medication details included in
+                                        this prescription.
+                                    </SectionDescription>
+                                </SectionHeader>
 
                                 {medications.length > 0 ? (
                                     <MedicationList>
                                         {medications.map(
-                                            (medication, index) => (
+                                            (
+                                                medication,
+                                                index
+                                            ) => (
                                                 <MedicationCard
                                                     key={index}
                                                 >
@@ -386,9 +468,16 @@ function PrescriptionDetails() {
                             </Section>
 
                             <Section>
-                                <SectionTitle>
-                                    Instructions
-                                </SectionTitle>
+                                <SectionHeader>
+                                    <SectionTitle>
+                                        Instructions
+                                    </SectionTitle>
+
+                                    <SectionDescription>
+                                        Instructions provided for the
+                                        patient.
+                                    </SectionDescription>
+                                </SectionHeader>
 
                                 <InstructionsCard>
                                     <InstructionsText>

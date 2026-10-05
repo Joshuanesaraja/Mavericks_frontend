@@ -1,3 +1,5 @@
+import { lazy, Suspense } from "react";
+
 import {
     BrowserRouter,
     Routes,
@@ -5,7 +7,7 @@ import {
     Navigate
 } from "react-router-dom";
 
-import LoginPage from "../pages/Auth/LoginPage";
+import RegisterPage from "../pages/Auth/RegisterPage";
 import DashboardPage from "../pages/Dashboard/DashboardPage";
 import PatientList from "../pages/Patients/PatientList";
 import AppointmentList from "../pages/Appointments/AppointmentList";
@@ -23,13 +25,27 @@ import DashboardLayout from "../components/layout/DashboardLayout";
 import ProtectedRoute from "./ProtectedRoute";
 import RoleBasedRoute from "./RoleBasedRoute";
 
+const LoginPage = lazy(() =>
+    import("../pages/Auth/LoginPage")
+);
+
+
 function AppRouter() {
     return (
         <BrowserRouter>
             <Routes>
                 <Route
                     path="/login"
-                    element={<LoginPage />}
+                    element={
+                        <Suspense fallback={<div>Loading login...</div>}>
+                            <LoginPage />
+                        </Suspense>
+                    }
+                />
+
+                <Route
+                    path="/register"
+                    element={<RegisterPage />}
                 />
 
                 <Route

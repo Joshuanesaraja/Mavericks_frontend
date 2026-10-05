@@ -1,5 +1,9 @@
 import axios from "axios";
 import { encryptData, decryptData } from "./encryptionService";
+import { getTenantApiUrl } from "./tenantService";
+
+let currentTenant =
+    localStorage.getItem("tenant_subdomain");
 
 const axiosClient = axios.create({
     baseURL: process.env.REACT_APP_API_BASE_URL,
@@ -11,6 +15,17 @@ const axiosClient = axios.create({
 
 let csrfToken = null;
 
+export function setTenant(subdomain) {
+    currentTenant = subdomain;
+
+    if (subdomain) {
+        localStorage.setItem(
+            "tenant_subdomain",
+            subdomain
+        );
+    }
+}
+
 export function setCsrfToken(token) {
     csrfToken = token;
 }
@@ -21,6 +36,8 @@ export function getCsrfToken() {
 
 axiosClient.interceptors.request.use(
     (config) => {
+        config.baseURL = getTenantApiUrl(currentTenant);
+
         const method = config.method?.toUpperCase();
 
         if (["POST", "PUT", "DELETE"].includes(method)) {
