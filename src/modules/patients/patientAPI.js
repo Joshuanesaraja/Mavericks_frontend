@@ -1,7 +1,15 @@
 import apiService from "../../services/apiService";
 
-export function getPatients() {
-    return apiService.get("/patients");
+export function getPatients({
+    page = 1,
+    limit = 10
+} = {}) {
+    return apiService.get("/patients", {
+        params: {
+            page,
+            limit
+        }
+    });
 }
 
 export function getPatientById(id) {

@@ -16,15 +16,23 @@ import {
     getPatientsRequest,
     getPatientsSuccess,
     getPatientsFailure,
+
+    prefetchPatientsRequest,
+    prefetchPatientsSuccess,
+    prefetchPatientsFailure,
+
     getPatientRequest,
     getPatientSuccess,
     getPatientFailure,
+
     createPatientRequest,
     createPatientSuccess,
     createPatientFailure,
+
     updatePatientRequest,
     updatePatientSuccess,
     updatePatientFailure,
+
     deletePatientRequest,
     deletePatientSuccess,
     deletePatientFailure
@@ -39,15 +47,45 @@ function getErrorMessage(error) {
 }
 
 function getResponseData(response) {
-    return response?.data?.data || response?.data;
+    return (
+        response?.data?.data ||
+        response?.data
+    );
 }
 
-function* handleGetPatients() {
-    try {
-        const response = yield call(getPatients);
-        const data = getResponseData(response);
+/*
+ * =========================================================
+ * INITIAL / NORMAL PATIENT FETCH
+ * =========================================================
+ */
 
-        yield put(getPatientsSuccess(data));
+function* handleGetPatients(action) {
+    const page =
+        Number(
+            action.payload?.page
+        ) || 1;
+
+    const limit =
+        Number(
+            action.payload?.limit
+        ) || 10;
+
+    try {
+        const response =
+            yield call(
+                getPatients,
+                {
+                    page,
+                    limit
+                }
+            );
+
+        const data =
+            getResponseData(response);
+
+        yield put(
+            getPatientsSuccess(data)
+        );
     } catch (error) {
         yield put(
             getPatientsFailure(
@@ -57,16 +95,77 @@ function* handleGetPatients() {
     }
 }
 
+/*
+ * =========================================================
+ * BACKGROUND PREFETCH
+ * =========================================================
+ */
+
+function* handlePrefetchPatients(
+    action
+) {
+    const page =
+        Number(
+            action.payload?.page
+        ) || 1;
+
+    const limit =
+        Number(
+            action.payload?.limit
+        ) || 10;
+
+    try {
+        const response =
+            yield call(
+                getPatients,
+                {
+                    page,
+                    limit
+                }
+            );
+
+        const data =
+            getResponseData(response);
+
+        yield put(
+            prefetchPatientsSuccess(
+                data
+            )
+        );
+    } catch (error) {
+        yield put(
+            prefetchPatientsFailure({
+                page,
+
+                message:
+                    getErrorMessage(
+                        error
+                    )
+            })
+        );
+    }
+}
+
+/*
+ * =========================================================
+ * GET ONE PATIENT
+ * =========================================================
+ */
+
 function* handleGetPatient(action) {
     try {
-        const response = yield call(
-            getPatientById,
-            action.payload
+        const response =
+            yield call(
+                getPatientById,
+                action.payload
+            );
+
+        const data =
+            getResponseData(response);
+
+        yield put(
+            getPatientSuccess(data)
         );
-
-        const data = getResponseData(response);
-
-        yield put(getPatientSuccess(data));
     } catch (error) {
         yield put(
             getPatientFailure(
@@ -76,16 +175,26 @@ function* handleGetPatient(action) {
     }
 }
 
+/*
+ * =========================================================
+ * CREATE
+ * =========================================================
+ */
+
 function* handleCreatePatient(action) {
     try {
-        const response = yield call(
-            createPatient,
-            action.payload
+        const response =
+            yield call(
+                createPatient,
+                action.payload
+            );
+
+        const data =
+            getResponseData(response);
+
+        yield put(
+            createPatientSuccess(data)
         );
-
-        const data = getResponseData(response);
-
-        yield put(createPatientSuccess(data));
     } catch (error) {
         yield put(
             createPatientFailure(
@@ -95,19 +204,32 @@ function* handleCreatePatient(action) {
     }
 }
 
+/*
+ * =========================================================
+ * UPDATE
+ * =========================================================
+ */
+
 function* handleUpdatePatient(action) {
     try {
-        const { id, patientData } = action.payload;
-
-        const response = yield call(
-            updatePatient,
+        const {
             id,
             patientData
+        } = action.payload;
+
+        const response =
+            yield call(
+                updatePatient,
+                id,
+                patientData
+            );
+
+        const data =
+            getResponseData(response);
+
+        yield put(
+            updatePatientSuccess(data)
         );
-
-        const data = getResponseData(response);
-
-        yield put(updatePatientSuccess(data));
     } catch (error) {
         yield put(
             updatePatientFailure(
@@ -117,6 +239,12 @@ function* handleUpdatePatient(action) {
     }
 }
 
+/*
+ * =========================================================
+ * DELETE
+ * =========================================================
+ */
+
 function* handleDeletePatient(action) {
     try {
         yield call(
@@ -125,7 +253,9 @@ function* handleDeletePatient(action) {
         );
 
         yield put(
-            deletePatientSuccess(action.payload)
+            deletePatientSuccess(
+                action.payload
+            )
         );
     } catch (error) {
         yield put(
@@ -140,6 +270,11 @@ export default function* patientSaga() {
     yield takeLatest(
         getPatientsRequest.type,
         handleGetPatients
+    );
+
+    yield takeLatest(
+        prefetchPatientsRequest.type,
+        handlePrefetchPatients
     );
 
     yield takeLatest(

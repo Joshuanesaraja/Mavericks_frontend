@@ -9,3 +9,23 @@ export const selectPatientLoading = (state) =>
 
 export const selectPatientError = (state) =>
     state.patients.error;
+
+export const selectPatientPagination = (
+    state
+) =>
+    state.patients.pagination;
+
+export const selectPatientLoadedBatches = (
+    state
+) =>
+    state.patients.loadedBatches;
+
+export const selectPatientPrefetchLoading = (
+    state
+) =>
+    state.patients.prefetchLoading;
+
+export const selectPatientPrefetchError = (
+    state
+) =>
+    state.patients.prefetchError;
