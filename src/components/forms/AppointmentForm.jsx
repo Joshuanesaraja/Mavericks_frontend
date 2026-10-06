@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import useAppointments from "../../modules/appointments/hooks/useAppointments";
 import { usePatients } from "../../modules/patients/hooks/usePatients";
-import { useUsers } from "../../modules/users/hooks/useUsers";
 
 import Input from "../common/Input";
 import Button from "../common/Button";
@@ -75,7 +74,7 @@ const Select = styled.select`
 
     font-family:
         ${({ theme }) =>
-            theme.typography.fontFamily};
+        theme.typography.fontFamily};
 
     font-size:
         ${({ theme }) => theme.typography.body};
@@ -83,7 +82,7 @@ const Select = styled.select`
     &:focus {
         border-color:
             ${({ theme }) =>
-                theme.colors.primary};
+        theme.colors.primary};
 
         outline: none;
     }
@@ -91,7 +90,7 @@ const Select = styled.select`
     &:disabled {
         background:
             ${({ theme }) =>
-                theme.colors.surfaceHover};
+        theme.colors.surfaceHover};
 
         cursor: not-allowed;
 
@@ -123,7 +122,7 @@ const TextArea = styled.textarea`
 
     font-family:
         ${({ theme }) =>
-            theme.typography.fontFamily};
+        theme.typography.fontFamily};
 
     font-size:
         ${({ theme }) => theme.typography.body};
@@ -131,7 +130,7 @@ const TextArea = styled.textarea`
     &:focus {
         border-color:
             ${({ theme }) =>
-                theme.colors.primary};
+        theme.colors.primary};
 
         outline: none;
     }
@@ -139,7 +138,7 @@ const TextArea = styled.textarea`
     &:disabled {
         background:
             ${({ theme }) =>
-                theme.colors.surfaceHover};
+        theme.colors.surfaceHover};
 
         cursor: not-allowed;
 
@@ -151,11 +150,11 @@ const TextArea = styled.textarea`
 const HelpText = styled.small`
     color:
         ${({ theme }) =>
-            theme.colors.textSecondary};
+        theme.colors.textSecondary};
 
     font-size:
         ${({ theme }) =>
-            theme.typography.small};
+        theme.typography.small};
 `;
 
 
@@ -169,22 +168,22 @@ const ErrorMessage = styled.div`
     border:
         1px solid
         ${({ theme }) =>
-            theme.colors.danger};
+        theme.colors.danger};
 
     border-radius:
         ${({ theme }) =>
-            theme.radius.sm};
+        theme.radius.sm};
 
     background:
         rgba(220, 38, 38, 0.08);
 
     color:
         ${({ theme }) =>
-            theme.colors.danger};
+        theme.colors.danger};
 
     font-size:
         ${({ theme }) =>
-            theme.typography.small};
+        theme.typography.small};
 `;
 
 
@@ -200,7 +199,7 @@ const FormActions = styled.div`
 
     padding-top:
         ${({ theme }) =>
-            theme.spacing.sm};
+        theme.spacing.sm};
 `;
 
 
@@ -250,23 +249,18 @@ function toApiDateTime(value) {
 }
 
 
-function getPatientUserId(patient) {
-    return (
-        patient?.user_id ??
-        patient?.userId ??
-        patient?.id
-    );
+function getPatientId(patient) {
+    return patient?.id;
 }
 
-
 function getPatientName(patient) {
-    return (
-        patient?.name ||
-        patient?.user_name ||
-        patient?.full_name ||
-        patient?.fullName ||
-        `Patient #${getPatientUserId(patient)}`
-    );
+    if (patient?.encrypted_data) {
+        return patient.encrypted_data
+            .split(",")[0]
+            .trim();
+    }
+
+    return `Patient #${getPatientId(patient)}`;
 }
 
 
@@ -280,33 +274,6 @@ function getProviderName(user) {
 }
 
 
-function hasProviderRole(user) {
-    if (!user?.roles) {
-        return false;
-    }
-
-    if (Array.isArray(user.roles)) {
-        return user.roles.some(
-            (role) => {
-                if (typeof role === "string") {
-                    return (
-                        role.toLowerCase() ===
-                        "provider"
-                    );
-                }
-
-                return (
-                    role?.name
-                        ?.toLowerCase() ===
-                    "provider"
-                );
-            }
-        );
-    }
-
-    return false;
-}
-
 
 function AppointmentForm({
     appointment = null,
@@ -319,7 +286,11 @@ function AppointmentForm({
         creating,
         updating,
         error,
-        clearError
+        clearError,
+        providers,
+        providersLoading,
+        providersError,
+        loadProviders
     } = useAppointments();
 
 
@@ -329,14 +300,6 @@ function AppointmentForm({
         error: patientsError,
         loadPatients
     } = usePatients();
-
-
-    const {
-        users,
-        loading: usersLoading,
-        error: usersError,
-        loadUsers
-    } = useUsers();
 
 
     const [patientId, setPatientId] =
@@ -369,23 +332,11 @@ function AppointmentForm({
      */
     useEffect(() => {
         loadPatients();
-        loadUsers();
+        loadProviders();
     }, [
         loadPatients,
-        loadUsers
+        loadProviders
     ]);
-
-
-    /*
-     * Only show users who have the
-     * canonical Provider role.
-     */
-    const providers = useMemo(() => {
-        return users.filter(
-            (user) =>
-                hasProviderRole(user)
-        );
-    }, [users]);
 
 
     /*
@@ -523,7 +474,7 @@ function AppointmentForm({
 
     const loadingPeople =
         patientsLoading ||
-        usersLoading;
+        providersLoading;
 
 
     return (
@@ -548,11 +499,11 @@ function AppointmentForm({
                 )}
 
 
-                {usersError && (
+                {providersError && (
                     <ErrorMessage>
                         Unable to load providers:
                         {" "}
-                        {usersError}
+                        {providersError}
                     </ErrorMessage>
                 )}
 
@@ -588,7 +539,7 @@ function AppointmentForm({
                         {patients.map(
                             (patient) => {
                                 const id =
-                                    getPatientUserId(
+                                    getPatientId(
                                         patient
                                     );
 
@@ -636,11 +587,11 @@ function AppointmentForm({
                         required
                         disabled={
                             isSaving ||
-                            usersLoading
+                            providersLoading
                         }
                     >
                         <option value="">
-                            {usersLoading
+                            {providersLoading
                                 ? "Loading providers..."
                                 : "Select provider"}
                         </option>

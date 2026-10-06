@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    useLocation,
-    useNavigate
-} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 import { useAuth } from "../../modules/auth/hooks/useAuth";
@@ -94,7 +91,6 @@ const MarketingDescription = styled.p`
     line-height: 1.7;
 `;
 
-
 const LoginCard = styled.div`
     width: 100%;
     max-width: 480px;
@@ -108,7 +104,6 @@ const LoginCard = styled.div`
 
     box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
-
 
 const LoginTitle = styled.h2`
     margin: 0;
@@ -176,7 +171,6 @@ const RegisterLink = styled.button`
 
 function LoginPage() {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const {
         login,
@@ -187,9 +181,6 @@ function LoginPage() {
         user
     } = useAuth();
 
-    const [subdomain, setSubdomain] = useState(
-        location.state?.subdomain || ""
-    );
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
@@ -207,7 +198,6 @@ function LoginPage() {
         clearError();
 
         login({
-            subdomain,
             email,
             password
         });
@@ -215,9 +205,7 @@ function LoginPage() {
 
     return (
         <PageContainer>
-
             <MarketingPanel>
-
                 <MarketingBrand>
                     <MarketingBrandTitle>
                         Healthcare MVP
@@ -229,7 +217,6 @@ function LoginPage() {
                 </MarketingBrand>
 
                 <MarketingContent>
-
                     <MarketingTitle>
                         Better Care
                         <br />
@@ -249,14 +236,10 @@ function LoginPage() {
                         <br />
                         platform.
                     </MarketingDescription>
-
                 </MarketingContent>
-
             </MarketingPanel>
 
             <LoginCard>
-
-
                 <LoginTitle>
                     Sign in to your account
                 </LoginTitle>
@@ -268,27 +251,6 @@ function LoginPage() {
                 )}
 
                 <Form onSubmit={handleSubmit}>
-
-                    <Field>
-                        <Label htmlFor="subdomain">
-                            Tenant
-                        </Label>
-
-                        <Input
-                            id="subdomain"
-                            name="subdomain"
-                            type="text"
-                            value={subdomain}
-                            onChange={(e) =>
-                                setSubdomain(
-                                    e.target.value.toLowerCase()
-                                )
-                            }
-                            placeholder="Enter your tenant subdomain"
-                            required
-                        />
-                    </Field>
-
                     <Field>
                         <Label htmlFor="email">
                             Email
@@ -341,11 +303,8 @@ function LoginPage() {
                         Don't have an account?
                         {" "}Click here to register
                     </RegisterLink>
-
                 </Form>
-
             </LoginCard>
-
         </PageContainer>
     );
 }

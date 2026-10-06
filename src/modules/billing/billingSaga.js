@@ -90,9 +90,6 @@ function* handleCreateInvoice(action) {
             getInvoicesRequest()
         );
 
-        yield put(
-            getBillingSummaryRequest()
-        );
     } catch (error) {
         yield put(
             billingFailure(

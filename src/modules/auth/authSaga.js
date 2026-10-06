@@ -32,8 +32,7 @@ import {
 } from "./authSlice";
 
 import {
-    setCsrfToken,
-    setTenant
+    setCsrfToken
 } from "../../services/axiosClient";
 
 function getErrorMessage(error) {
@@ -63,8 +62,6 @@ function* handleGetCsrfToken() {
 function* handleLogin(action) {
     try {
         const { subdomain, ...credentials } = action.payload;
-
-        setTenant(subdomain);
 
         yield call(handleGetCsrfToken);
 

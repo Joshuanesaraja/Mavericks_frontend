@@ -1,10 +1,11 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 import {
     BrowserRouter,
     Routes,
     Route,
-    Navigate
+    Navigate,
+    useLocation
 } from "react-router-dom";
 
 import RegisterPage from "../pages/Auth/RegisterPage";
@@ -28,14 +29,37 @@ import RoleBasedRoute from "./RoleBasedRoute";
 
 import InvoicePage from "../pages/Billing/InvoicePage";
 
+import { useAuth } from "../modules/auth/hooks/useAuth";
+import { getTenantSubdomain } from "../services/tenantService";
+
 const LoginPage = lazy(() =>
     import("../pages/Auth/LoginPage")
 );
 
+function AuthInitializer() {
+    const { loadProfile } = useAuth();
+    const location = useLocation();
+
+    useEffect(() => {
+        const tenant = getTenantSubdomain();
+
+        const isPublicAuthPage =
+            location.pathname === "/login" ||
+            location.pathname === "/register";
+
+        if (tenant && !isPublicAuthPage) {
+            loadProfile();
+        }
+    }, [loadProfile, location.pathname]);
+
+    return null;
+}
 
 function AppRouter() {
     return (
         <BrowserRouter>
+            <AuthInitializer />
+
             <Routes>
                 <Route
                     path="/login"
@@ -174,7 +198,7 @@ function AppRouter() {
                             <RoleBasedRoute
                                 allowedRoles={[
                                     "Provider",
-                                    "Nurse",
+                                    "Nurse"
                                 ]}
                             >
                                 <DashboardLayout>
@@ -184,6 +208,7 @@ function AppRouter() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
                     path="/notifications"
                     element={
@@ -201,6 +226,7 @@ function AppRouter() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
                     path="/calendar"
                     element={

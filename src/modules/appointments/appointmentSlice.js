@@ -14,6 +14,10 @@ const initialState = {
     cancelling: false,
     statusUpdating: false,
 
+    providers: [],
+    providersLoading: false,
+    providersError: null,
+
     error: null,
     conflict: null,
     successMessage: null
@@ -187,7 +191,7 @@ const appointmentSlice = createSlice({
                     state.appointments.map(
                         (appointment) =>
                             String(appointment.id) ===
-                            String(updated.id)
+                                String(updated.id)
                                 ? updated
                                 : appointment
                     );
@@ -197,7 +201,7 @@ const appointmentSlice = createSlice({
                         .map(
                             (appointment) =>
                                 String(appointment.id) ===
-                                String(updated.id)
+                                    String(updated.id)
                                     ? updated
                                     : appointment
                         )
@@ -267,7 +271,7 @@ const appointmentSlice = createSlice({
                     state.appointments.map(
                         (appointment) =>
                             String(appointment.id) ===
-                            String(cancelled.id)
+                                String(cancelled.id)
                                 ? cancelled
                                 : appointment
                     );
@@ -324,7 +328,7 @@ const appointmentSlice = createSlice({
                     state.appointments.map(
                         (appointment) =>
                             String(appointment.id) ===
-                            String(updated.id)
+                                String(updated.id)
                                 ? updated
                                 : appointment
                     );
@@ -348,7 +352,7 @@ const appointmentSlice = createSlice({
                                     String(
                                         appointment.id
                                     ) ===
-                                    String(updated.id)
+                                        String(updated.id)
                                         ? updated
                                         : appointment
                             )
@@ -390,6 +394,30 @@ const appointmentSlice = createSlice({
                 "Unable to update appointment status";
         },
 
+        fetchProvidersRequest(state) {
+            state.providersLoading = true;
+            state.providersError = null;
+        },
+
+        fetchProvidersSuccess(state, action) {
+            state.providersLoading = false;
+            state.providersError = null;
+
+            const response = action.payload;
+            const data = response?.data;
+
+            state.providers = Array.isArray(data)
+                ? data
+                : data?.providers || [];
+        },
+
+        fetchProvidersFailure(state, action) {
+            state.providersLoading = false;
+            state.providersError =
+                action.payload ||
+                "Unable to load providers";
+        },
+
         clearAppointmentError(state) {
             state.error = null;
             state.conflict = null;
@@ -429,6 +457,10 @@ export const {
     updateAppointmentRequest,
     updateAppointmentSuccess,
     updateAppointmentFailure,
+
+    fetchProvidersRequest,
+    fetchProvidersSuccess,
+    fetchProvidersFailure,
 
     cancelAppointmentRequest,
     cancelAppointmentSuccess,

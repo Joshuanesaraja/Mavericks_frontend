@@ -112,7 +112,7 @@ const RegisterCard = styled.div`
 
     box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
-    
+
 
 const RegisterTitle = styled.h2`
     margin: 0;
@@ -222,11 +222,8 @@ function RegisterPage() {
         );
 
         const timer = setTimeout(() => {
-            navigate("/login", {
-                state: {
-                    subdomain: registration.subdomain
-                }
-            });
+            window.location.href =
+                `http://${registration.subdomain}.localhost:3000/login`;
         }, 2000);
 
         return () => clearTimeout(timer);

@@ -28,6 +28,14 @@ const useNotifications = ({
 } = {}) => {
     const dispatch = useDispatch();
 
+    const user = useSelector(
+        (state) => state.auth?.user
+    );
+
+    const canAccessNotifications =
+        user?.roles?.includes("Provider") ||
+        user?.roles?.includes("Nurse");
+
     const notificationState =
         useSelector(
             (state) =>
@@ -36,10 +44,10 @@ const useNotifications = ({
 
     const {
         notifications =
-            EMPTY_ARRAY,
+        EMPTY_ARRAY,
 
         unreadNotifications =
-            EMPTY_ARRAY,
+        EMPTY_ARRAY,
 
         unreadCount = 0,
 
@@ -125,25 +133,26 @@ const useNotifications = ({
      * manually refreshing the browser.
      */
     useEffect(() => {
-        if (!autoFetchCount) {
+        if (
+            !autoFetchCount ||
+            !canAccessNotifications
+        ) {
             return undefined;
         }
 
-        // Fetch immediately.
         getUnreadCount();
 
-        // Continue checking for new notifications.
         const intervalId =
             setInterval(() => {
                 getUnreadCount();
             }, pollingInterval);
 
-        // Stop polling when the component unmounts.
         return () => {
             clearInterval(intervalId);
         };
     }, [
         autoFetchCount,
+        canAccessNotifications,
         pollingInterval,
         getUnreadCount,
     ]);

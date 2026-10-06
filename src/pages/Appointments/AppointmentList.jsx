@@ -1,4 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState
+} from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 import useAppointments from "../../modules/appointments/hooks/useAppointments";
@@ -441,6 +446,28 @@ function getStatusLabel(status) {
 }
 
 function AppointmentList() {
+    const user = useSelector(
+        (state) => state.auth?.user
+    );
+
+    const userRoles = Array.isArray(user?.roles)
+        ? user.roles
+            .map((role) =>
+                typeof role === "string"
+                    ? role.toLowerCase()
+                    : role?.name?.toLowerCase()
+            )
+            .filter(Boolean)
+        : [];
+
+    const canManageAppointments =
+        userRoles.includes("provider") ||
+        userRoles.includes("nurse") ||
+        userRoles.includes("patient");
+
+    const canViewUpcoming =
+        canManageAppointments;
+
     const {
         appointments,
         upcoming,
@@ -494,10 +521,14 @@ function AppointmentList() {
 
     useEffect(() => {
         getAppointments();
-        getUpcomingAppointments();
+
+        if (canViewUpcoming) {
+            getUpcomingAppointments();
+        }
     }, [
         getAppointments,
-        getUpcomingAppointments
+        getUpcomingAppointments,
+        canViewUpcoming
     ]);
 
     useEffect(() => {
@@ -506,7 +537,11 @@ function AppointmentList() {
         }
 
         getAppointments();
-        getUpcomingAppointments();
+
+        if (canViewUpcoming) {
+            getUpcomingAppointments();
+        }
+
         clearSuccess();
 
         setFormOpen(false);
@@ -515,7 +550,8 @@ function AppointmentList() {
         successMessage,
         getAppointments,
         getUpcomingAppointments,
-        clearSuccess
+        clearSuccess,
+        canViewUpcoming
     ]);
 
     const columns = useMemo(
@@ -654,19 +690,24 @@ function AppointmentList() {
                         type="button"
                         onClick={() => {
                             getAppointments();
-                            getUpcomingAppointments();
+
+                            if (canViewUpcoming) {
+                                getUpcomingAppointments();
+                            }
                         }}
                         disabled={loading}
                     >
                         Refresh
                     </OutlineButton>
 
-                    <Button
-                        type="button"
-                        onClick={openCreate}
-                    >
-                        New Appointment
-                    </Button>
+                    {canManageAppointments && (
+                        <Button
+                            type="button"
+                            onClick={openCreate}
+                        >
+                            New Appointment
+                        </Button>
+                    )}
                 </HeaderActions>
             </PageHeader>
 
@@ -676,123 +717,127 @@ function AppointmentList() {
                 </ErrorMessage>
             )}
 
-            <Section>
-                <SectionHeader>
-                    <SectionHeading>
-                        <SectionTitle>
-                            Upcoming Appointments
-                        </SectionTitle>
+            {canViewUpcoming && (
+                <Section>
+                    <SectionHeader>
+                        <SectionHeading>
+                            <SectionTitle>
+                                Upcoming Appointments
+                            </SectionTitle>
 
-                        <SectionDescription>
-                            View your upcoming scheduled
-                            appointments.
-                        </SectionDescription>
-                    </SectionHeading>
-                </SectionHeader>
+                            <SectionDescription>
+                                View your upcoming scheduled
+                                appointments.
+                            </SectionDescription>
+                        </SectionHeading>
+                    </SectionHeader>
 
-                {upcomingLoading &&
-                    upcoming.length === 0 && (
-                        <Loader />
-                    )}
+                    {upcomingLoading &&
+                        upcoming.length === 0 && (
+                            <Loader />
+                        )}
 
-                {!upcomingLoading &&
-                    upcoming.length === 0 && (
-                        <Message>
-                            No upcoming appointments
-                            found.
-                        </Message>
-                    )}
+                    {!upcomingLoading &&
+                        upcoming.length === 0 && (
+                            <Message>
+                                No upcoming appointments
+                                found.
+                            </Message>
+                        )}
 
-                {upcoming.length > 0 && (
-                    <UpcomingGrid>
-                        {upcoming
-                            .slice(0, 6)
-                            .map(
-                                (appointment) => (
-                                    <UpcomingCard
-                                        key={
-                                            appointment.id
-                                        }
-                                    >
-                                        <AppointmentHeading>
-                                            <AppointmentName>
-                                                {appointment.patient_name ||
-                                                    `Patient #${appointment.patient_id}`}
-                                            </AppointmentName>
+                    {upcoming.length > 0 && (
+                        <UpcomingGrid>
+                            {upcoming
+                                .slice(0, 6)
+                                .map(
+                                    (appointment) => (
+                                        <UpcomingCard
+                                            key={
+                                                appointment.id
+                                            }
+                                        >
+                                            <AppointmentHeading>
+                                                <AppointmentName>
+                                                    {appointment.patient_name ||
+                                                        `Patient #${appointment.patient_id}`}
+                                                </AppointmentName>
 
-                                            <StatusBadge
-                                                $status={
-                                                    appointment.status
-                                                }
-                                            >
-                                                {getStatusLabel(
-                                                    appointment.status
-                                                )}
-                                            </StatusBadge>
-                                        </AppointmentHeading>
-
-                                        <AppointmentMeta>
-                                            <span>
-                                                Provider:{" "}
-                                                {appointment.provider_name ||
-                                                    `#${appointment.provider_id}`}
-                                            </span>
-
-                                            <span>
-                                                {formatDateTime(
-                                                    appointment.start_at
-                                                )}
-                                            </span>
-
-                                            <span>
-                                                Until{" "}
-                                                {formatDateTime(
-                                                    appointment.end_at
-                                                )}
-                                            </span>
-
-                                            {appointment.reason && (
-                                                <span>
-                                                    {
-                                                        appointment.reason
+                                                <StatusBadge
+                                                    $status={
+                                                        appointment.status
                                                     }
+                                                >
+                                                    {getStatusLabel(
+                                                        appointment.status
+                                                    )}
+                                                </StatusBadge>
+                                            </AppointmentHeading>
+
+                                            <AppointmentMeta>
+                                                <span>
+                                                    Provider:{" "}
+                                                    {appointment.provider_name ||
+                                                        `#${appointment.provider_id}`}
                                                 </span>
-                                            )}
-                                        </AppointmentMeta>
 
-                                        <CardActions>
-                                            <OutlineButton
-                                                type="button"
-                                                onClick={() =>
-                                                    openDetails(
-                                                        appointment
-                                                    )
-                                                }
-                                            >
-                                                Details
-                                            </OutlineButton>
+                                                <span>
+                                                    {formatDateTime(
+                                                        appointment.start_at
+                                                    )}
+                                                </span>
 
-                                            <Button
-                                                type="button"
-                                                onClick={() =>
-                                                    openEdit(
-                                                        appointment
-                                                    )
-                                                }
-                                                disabled={
-                                                    appointment.status ===
-                                                    "cancelled"
-                                                }
-                                            >
-                                                Reschedule
-                                            </Button>
-                                        </CardActions>
-                                    </UpcomingCard>
-                                )
-                            )}
-                    </UpcomingGrid>
-                )}
-            </Section>
+                                                <span>
+                                                    Until{" "}
+                                                    {formatDateTime(
+                                                        appointment.end_at
+                                                    )}
+                                                </span>
+
+                                                {appointment.reason && (
+                                                    <span>
+                                                        {
+                                                            appointment.reason
+                                                        }
+                                                    </span>
+                                                )}
+                                            </AppointmentMeta>
+
+                                            <CardActions>
+                                                <OutlineButton
+                                                    type="button"
+                                                    onClick={() =>
+                                                        openDetails(
+                                                            appointment
+                                                        )
+                                                    }
+                                                >
+                                                    Details
+                                                </OutlineButton>
+
+                                                {canManageAppointments && (
+                                                    <Button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openEdit(
+                                                                appointment
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            appointment.status ===
+                                                            "cancelled"
+                                                        }
+                                                    >
+                                                        Reschedule
+                                                    </Button>
+                                                )}
+                                            </CardActions>
+                                        </UpcomingCard>
+                                    )
+                                )}
+                        </UpcomingGrid>
+                    )}
+                </Section>
+            )}
 
             <Section>
                 <SectionHeader>
@@ -875,52 +920,56 @@ function AppointmentList() {
                                             View
                                         </SmallButton>
 
-                                        <SmallButton
-                                            type="button"
-                                            onClick={() =>
-                                                openEdit(
-                                                    appointment
-                                                )
-                                            }
-                                            disabled={
-                                                appointment.status ===
-                                                "cancelled"
-                                            }
-                                        >
-                                            Edit
-                                        </SmallButton>
-
-                                        {appointment.status !==
-                                            "cancelled" && (
-                                                <DangerSmallButton
-                                                    type="button"
-                                                    onClick={() =>
-                                                        openCancel(
-                                                            appointment
-                                                        )
-                                                    }
-                                                >
-                                                    Cancel
-                                                </DangerSmallButton>
-                                            )}
-
-                                        {appointment.status ===
-                                            "scheduled" && (
+                                        {canManageAppointments && (
+                                            <>
                                                 <SmallButton
                                                     type="button"
                                                     onClick={() =>
-                                                        updateAppointmentStatus(
-                                                            appointment.id,
-                                                            "confirmed"
+                                                        openEdit(
+                                                            appointment
                                                         )
                                                     }
                                                     disabled={
-                                                        updating
+                                                        appointment.status ===
+                                                        "cancelled"
                                                     }
                                                 >
-                                                    Confirm
+                                                    Edit
                                                 </SmallButton>
-                                            )}
+
+                                                {appointment.status !==
+                                                    "cancelled" && (
+                                                        <DangerSmallButton
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openCancel(
+                                                                    appointment
+                                                                )
+                                                            }
+                                                        >
+                                                            Cancel
+                                                        </DangerSmallButton>
+                                                    )}
+
+                                                {appointment.status ===
+                                                    "scheduled" && (
+                                                        <SmallButton
+                                                            type="button"
+                                                            onClick={() =>
+                                                                updateAppointmentStatus(
+                                                                    appointment.id,
+                                                                    "confirmed"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                updating
+                                                            }
+                                                        >
+                                                            Confirm
+                                                        </SmallButton>
+                                                    )}
+                                            </>
+                                        )}
                                     </TableActions>
                                 </Cell>
                             </>

@@ -8,6 +8,7 @@ import {
     fetchAppointmentsRequest,
     fetchUpcomingRequest,
     fetchAppointmentRequest,
+    fetchProvidersRequest,
 
     createAppointmentRequest,
     updateAppointmentRequest,
@@ -54,6 +55,13 @@ export default function useAppointments() {
         useCallback(() => {
             dispatch(
                 fetchUpcomingRequest()
+            );
+        }, [dispatch]);
+
+    const loadProviders =
+        useCallback(() => {
+            dispatch(
+                fetchProvidersRequest()
             );
         }, [dispatch]);
 
@@ -154,6 +162,7 @@ export default function useAppointments() {
 
         getAppointments,
         getUpcomingAppointments,
+        loadProviders,
         getAppointment,
 
         createAppointment,

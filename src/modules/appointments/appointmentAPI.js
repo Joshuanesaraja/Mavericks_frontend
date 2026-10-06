@@ -11,6 +11,10 @@ const appointmentAPI = {
         return apiService.get("/appointments/upcoming");
     },
 
+    getProviders: () => {
+        return apiService.get("/providers");
+    },
+
     getById: (id) => {
         if (!id) {
             throw new Error("Appointment id is required");

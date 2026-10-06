@@ -33,7 +33,11 @@ import {
 
     updateAppointmentStatusRequest,
     updateAppointmentStatusSuccess,
-    updateAppointmentStatusFailure
+    updateAppointmentStatusFailure,
+
+    fetchProvidersRequest,
+    fetchProvidersSuccess,
+    fetchProvidersFailure
 } from "./appointmentSlice";
 
 function getErrorMessage(error) {
@@ -89,6 +93,26 @@ function* fetchUpcomingWorker() {
     } catch (error) {
         yield put(
             fetchUpcomingFailure(
+                getErrorMessage(error)
+            )
+        );
+    }
+}
+
+function* fetchProvidersWorker() {
+    try {
+        const response = yield call(
+            appointmentAPI.getProviders
+        );
+
+        yield put(
+            fetchProvidersSuccess(
+                getResponseData(response)
+            )
+        );
+    } catch (error) {
+        yield put(
+            fetchProvidersFailure(
                 getErrorMessage(error)
             )
         );
@@ -221,6 +245,11 @@ export default function* appointmentSaga() {
     yield takeLatest(
         fetchUpcomingRequest.type,
         fetchUpcomingWorker
+    );
+
+    yield takeLatest(
+        fetchProvidersRequest.type,
+        fetchProvidersWorker
     );
 
     yield takeLatest(
