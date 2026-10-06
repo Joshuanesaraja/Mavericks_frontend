@@ -9,6 +9,7 @@ import chatReducer from "../modules/chat/chatSlice";
 import staffReducer from "../modules/staff/staffSlice";
 import calendarReducer from "../modules/calendar/calendarSlice";
 import billingReducer from "../modules/billing/billingSlice";
+import notificationReducer from "../modules/notifications/notificationSlice";
 
 const rootReducer = combineReducers({
     auth: authReducer,
@@ -19,7 +20,8 @@ const rootReducer = combineReducers({
     chat: chatReducer,
     staff: staffReducer,
     calendar: calendarReducer,
-    billing: billingReducer
+    billing: billingReducer,
+    notifications: notificationReducer,
 });
 
 export default rootReducer;

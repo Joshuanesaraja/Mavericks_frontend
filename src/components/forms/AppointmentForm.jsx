@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 import useAppointments from "../../modules/appointments/hooks/useAppointments";
+import { usePatients } from "../../modules/patients/hooks/usePatients";
+import { useUsers } from "../../modules/users/hooks/useUsers";
+
 import Input from "../common/Input";
 import Button from "../common/Button";
+
 
 const FormContainer = styled.div`
     display: flex;
     flex-direction: column;
     gap: ${({ theme }) => theme.spacing.lg};
 `;
+
 
 const Form = styled.form`
     display: grid;
@@ -24,6 +29,7 @@ const Form = styled.form`
     }
 `;
 
+
 const Field = styled.div`
     display: flex;
     flex-direction: column;
@@ -31,9 +37,11 @@ const Field = styled.div`
     gap: ${({ theme }) => theme.spacing.xs};
 `;
 
+
 const FullWidthField = styled(Field)`
     grid-column: 1 / -1;
 `;
+
 
 const Label = styled.label`
     color: ${({ theme }) =>
@@ -44,6 +52,7 @@ const Label = styled.label`
 
     font-weight: 600;
 `;
+
 
 const Select = styled.select`
     width: 100%;
@@ -66,14 +75,15 @@ const Select = styled.select`
 
     font-family:
         ${({ theme }) =>
-        theme.typography.fontFamily};
+            theme.typography.fontFamily};
 
     font-size:
         ${({ theme }) => theme.typography.body};
 
     &:focus {
         border-color:
-            ${({ theme }) => theme.colors.primary};
+            ${({ theme }) =>
+                theme.colors.primary};
 
         outline: none;
     }
@@ -81,13 +91,14 @@ const Select = styled.select`
     &:disabled {
         background:
             ${({ theme }) =>
-        theme.colors.surfaceHover};
+                theme.colors.surfaceHover};
 
         cursor: not-allowed;
 
         opacity: 0.7;
     }
 `;
+
 
 const TextArea = styled.textarea`
     width: 100%;
@@ -112,14 +123,15 @@ const TextArea = styled.textarea`
 
     font-family:
         ${({ theme }) =>
-        theme.typography.fontFamily};
+            theme.typography.fontFamily};
 
     font-size:
         ${({ theme }) => theme.typography.body};
 
     &:focus {
         border-color:
-            ${({ theme }) => theme.colors.primary};
+            ${({ theme }) =>
+                theme.colors.primary};
 
         outline: none;
     }
@@ -127,7 +139,7 @@ const TextArea = styled.textarea`
     &:disabled {
         background:
             ${({ theme }) =>
-        theme.colors.surfaceHover};
+                theme.colors.surfaceHover};
 
         cursor: not-allowed;
 
@@ -135,13 +147,17 @@ const TextArea = styled.textarea`
     }
 `;
 
+
 const HelpText = styled.small`
     color:
-        ${({ theme }) => theme.colors.textSecondary};
+        ${({ theme }) =>
+            theme.colors.textSecondary};
 
     font-size:
-        ${({ theme }) => theme.typography.small};
+        ${({ theme }) =>
+            theme.typography.small};
 `;
+
 
 const ErrorMessage = styled.div`
     grid-column: 1 / -1;
@@ -152,33 +168,41 @@ const ErrorMessage = styled.div`
 
     border:
         1px solid
-        ${({ theme }) => theme.colors.danger};
+        ${({ theme }) =>
+            theme.colors.danger};
 
     border-radius:
-        ${({ theme }) => theme.radius.sm};
+        ${({ theme }) =>
+            theme.radius.sm};
 
     background:
         rgba(220, 38, 38, 0.08);
 
     color:
-        ${({ theme }) => theme.colors.danger};
+        ${({ theme }) =>
+            theme.colors.danger};
 
     font-size:
-        ${({ theme }) => theme.typography.small};
+        ${({ theme }) =>
+            theme.typography.small};
 `;
+
 
 const FormActions = styled.div`
     display: flex;
 
     justify-content: flex-end;
 
-    gap: ${({ theme }) => theme.spacing.sm};
+    gap: ${({ theme }) =>
+        theme.spacing.sm};
 
     grid-column: 1 / -1;
 
     padding-top:
-        ${({ theme }) => theme.spacing.sm};
+        ${({ theme }) =>
+            theme.spacing.sm};
 `;
+
 
 function toDateTimeLocal(value) {
     if (!value) {
@@ -214,6 +238,7 @@ function toDateTimeLocal(value) {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
+
 function toApiDateTime(value) {
     if (!value) {
         return "";
@@ -223,6 +248,65 @@ function toApiDateTime(value) {
         .replace("T", " ")
         .concat(":00");
 }
+
+
+function getPatientUserId(patient) {
+    return (
+        patient?.user_id ??
+        patient?.userId ??
+        patient?.id
+    );
+}
+
+
+function getPatientName(patient) {
+    return (
+        patient?.name ||
+        patient?.user_name ||
+        patient?.full_name ||
+        patient?.fullName ||
+        `Patient #${getPatientUserId(patient)}`
+    );
+}
+
+
+function getProviderName(user) {
+    return (
+        user?.name ||
+        user?.full_name ||
+        user?.fullName ||
+        `Provider #${user?.id}`
+    );
+}
+
+
+function hasProviderRole(user) {
+    if (!user?.roles) {
+        return false;
+    }
+
+    if (Array.isArray(user.roles)) {
+        return user.roles.some(
+            (role) => {
+                if (typeof role === "string") {
+                    return (
+                        role.toLowerCase() ===
+                        "provider"
+                    );
+                }
+
+                return (
+                    role?.name
+                        ?.toLowerCase() ===
+                    "provider"
+                );
+            }
+        );
+    }
+
+    return false;
+}
+
 
 function AppointmentForm({
     appointment = null,
@@ -238,37 +322,90 @@ function AppointmentForm({
         clearError
     } = useAppointments();
 
+
+    const {
+        patients,
+        loading: patientsLoading,
+        error: patientsError,
+        loadPatients
+    } = usePatients();
+
+
+    const {
+        users,
+        loading: usersLoading,
+        error: usersError,
+        loadUsers
+    } = useUsers();
+
+
     const [patientId, setPatientId] =
         useState("");
+
 
     const [providerId, setProviderId] =
         useState("");
 
+
     const [startAt, setStartAt] =
         useState("");
+
 
     const [endAt, setEndAt] =
         useState("");
 
+
     const [reason, setReason] =
         useState("");
+
 
     const [status, setStatus] =
         useState("scheduled");
 
+
+    /*
+     * Load patients and users when
+     * the appointment form opens.
+     */
+    useEffect(() => {
+        loadPatients();
+        loadUsers();
+    }, [
+        loadPatients,
+        loadUsers
+    ]);
+
+
+    /*
+     * Only show users who have the
+     * canonical Provider role.
+     */
+    const providers = useMemo(() => {
+        return users.filter(
+            (user) =>
+                hasProviderRole(user)
+        );
+    }, [users]);
+
+
+    /*
+     * Populate the form when editing.
+     */
     useEffect(() => {
         clearError();
 
         if (appointment) {
             setPatientId(
                 String(
-                    appointment.patient_id ?? ""
+                    appointment.patient_id ??
+                    ""
                 )
             );
 
             setProviderId(
                 String(
-                    appointment.provider_id ?? ""
+                    appointment.provider_id ??
+                    ""
                 )
             );
 
@@ -307,6 +444,7 @@ function AppointmentForm({
         clearError
     ]);
 
+
     const handleSubmit = (event) => {
         event.preventDefault();
 
@@ -318,6 +456,7 @@ function AppointmentForm({
         const endDate =
             new Date(endAt);
 
+
         if (
             !patientId ||
             !providerId ||
@@ -326,6 +465,7 @@ function AppointmentForm({
         ) {
             return;
         }
+
 
         if (
             Number.isNaN(
@@ -338,18 +478,18 @@ function AppointmentForm({
             return;
         }
 
+
         if (endDate <= startDate) {
             return;
         }
 
-        const payload = {
-            patient_id: Number(
-                patientId
-            ),
 
-            provider_id: Number(
-                providerId
-            ),
+        const payload = {
+            patient_id:
+                Number(patientId),
+
+            provider_id:
+                Number(providerId),
 
             start_at:
                 toApiDateTime(startAt),
@@ -357,8 +497,10 @@ function AppointmentForm({
             end_at:
                 toApiDateTime(endAt),
 
-            reason: reason.trim()
+            reason:
+                reason.trim()
         };
+
 
         if (appointment?.id) {
             updateAppointment({
@@ -370,72 +512,164 @@ function AppointmentForm({
             return;
         }
 
+
         createAppointment(payload);
     };
 
+
     const isSaving =
         creating || updating;
+
+
+    const loadingPeople =
+        patientsLoading ||
+        usersLoading;
+
 
     return (
         <FormContainer>
             <Form
                 onSubmit={handleSubmit}
             >
+
+                {error && (
+                    <ErrorMessage>
+                        {error}
+                    </ErrorMessage>
+                )}
+
+
+                {patientsError && (
+                    <ErrorMessage>
+                        Unable to load patients:
+                        {" "}
+                        {patientsError}
+                    </ErrorMessage>
+                )}
+
+
+                {usersError && (
+                    <ErrorMessage>
+                        Unable to load providers:
+                        {" "}
+                        {usersError}
+                    </ErrorMessage>
+                )}
+
+
                 <Field>
-                    <Label htmlFor="appointment-patient">
-                        Patient ID
+                    <Label
+                        htmlFor="appointment-patient"
+                    >
+                        Patient
                     </Label>
 
-                    <Input
+                    <Select
                         id="appointment-patient"
                         name="patient_id"
-                        type="number"
-                        min="1"
                         value={patientId}
                         onChange={(event) =>
                             setPatientId(
                                 event.target.value
                             )
                         }
-                        placeholder="Enter patient ID"
                         required
-                        disabled={isSaving}
-                    />
+                        disabled={
+                            isSaving ||
+                            patientsLoading
+                        }
+                    >
+                        <option value="">
+                            {patientsLoading
+                                ? "Loading patients..."
+                                : "Select patient"}
+                        </option>
+
+                        {patients.map(
+                            (patient) => {
+                                const id =
+                                    getPatientUserId(
+                                        patient
+                                    );
+
+                                if (!id) {
+                                    return null;
+                                }
+
+                                return (
+                                    <option
+                                        key={id}
+                                        value={id}
+                                    >
+                                        {getPatientName(
+                                            patient
+                                        )}
+                                    </option>
+                                );
+                            }
+                        )}
+                    </Select>
 
                     <HelpText>
-                        Use the patient's user ID
-                        from your backend.
+                        Select the patient for
+                        this appointment.
                     </HelpText>
                 </Field>
 
+
                 <Field>
-                    <Label htmlFor="appointment-provider">
-                        Provider ID
+                    <Label
+                        htmlFor="appointment-provider"
+                    >
+                        Provider
                     </Label>
 
-                    <Input
+                    <Select
                         id="appointment-provider"
                         name="provider_id"
-                        type="number"
-                        min="1"
                         value={providerId}
                         onChange={(event) =>
                             setProviderId(
                                 event.target.value
                             )
                         }
-                        placeholder="Enter provider ID"
                         required
-                        disabled={isSaving}
-                    />
+                        disabled={
+                            isSaving ||
+                            usersLoading
+                        }
+                    >
+                        <option value="">
+                            {usersLoading
+                                ? "Loading providers..."
+                                : "Select provider"}
+                        </option>
+
+                        {providers.map(
+                            (provider) => (
+                                <option
+                                    key={provider.id}
+                                    value={provider.id}
+                                >
+                                    {getProviderName(
+                                        provider
+                                    )}
+                                </option>
+                            )
+                        )}
+                    </Select>
 
                     <HelpText>
-                        Use the provider's user ID.
+                        Only users with the
+                        Provider role are shown.
                     </HelpText>
                 </Field>
 
+
                 <Field>
-                    <Label htmlFor="appointment-start">
+                    <Label
+                        htmlFor="appointment-start"
+                    >
                         Start date & time
                     </Label>
 
@@ -454,8 +688,11 @@ function AppointmentForm({
                     />
                 </Field>
 
+
                 <Field>
-                    <Label htmlFor="appointment-end">
+                    <Label
+                        htmlFor="appointment-end"
+                    >
                         End date & time
                     </Label>
 
@@ -474,44 +711,40 @@ function AppointmentForm({
                     />
                 </Field>
 
-                {appointment && (
-                    <Field>
-                        <Label htmlFor="appointment-status">
-                            Status
-                        </Label>
 
-                        <Select
-                            id="appointment-status"
-                            value={status}
-                            onChange={(event) =>
-                                setStatus(
-                                    event.target.value
-                                )
-                            }
-                            disabled={isSaving}
-                        >
-                            <option value="scheduled">
-                                Scheduled
-                            </option>
+                <Field>
+                    <Label htmlFor="appointment-status">
+                        Status
+                    </Label>
 
-                            <option value="confirmed">
-                                Confirmed
-                            </option>
+                    <Select
+                        id="appointment-status"
+                        name="status"
+                        value={status}
+                        onChange={(event) =>
+                            setStatus(
+                                event.target.value
+                            )
+                        }
+                        disabled={
+                            isSaving ||
+                            !appointment
+                        }
+                    >
+                        <option value="scheduled">
+                            Scheduled
+                        </option>
 
-                            <option value="completed">
-                                Completed
-                            </option>
+                        <option value="confirmed">
+                            Confirmed
+                        </option>
 
-                            <option value="cancelled">
-                                Cancelled
-                            </option>
+                        <option value="cancelled">
+                            Cancelled
+                        </option>
+                    </Select>
+                </Field>
 
-                            <option value="no-show">
-                                No-show
-                            </option>
-                        </Select>
-                    </Field>
-                )}
 
                 <FullWidthField>
                     <Label htmlFor="appointment-reason">
@@ -527,31 +760,31 @@ function AppointmentForm({
                                 event.target.value
                             )
                         }
-                        placeholder="Reason for appointment"
+                        placeholder="Enter appointment reason"
                         disabled={isSaving}
                     />
                 </FullWidthField>
 
-                {error && (
-                    <ErrorMessage>
-                        {error}
-                    </ErrorMessage>
-                )}
 
                 <FormActions>
-                    {onCancel && (
-                        <Button
-                            type="button"
-                            onClick={onCancel}
-                            disabled={isSaving}
-                        >
-                            Cancel
-                        </Button>
-                    )}
+                    <Button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={isSaving}
+                    >
+                        Cancel
+                    </Button>
 
                     <Button
                         type="submit"
-                        disabled={isSaving}
+                        disabled={
+                            isSaving ||
+                            loadingPeople ||
+                            !patientId ||
+                            !providerId ||
+                            !startAt ||
+                            !endAt
+                        }
                     >
                         {isSaving
                             ? "Saving..."
@@ -560,9 +793,11 @@ function AppointmentForm({
                                 : "Create Appointment"}
                     </Button>
                 </FormActions>
+
             </Form>
         </FormContainer>
     );
 }
+
 
 export default AppointmentForm;

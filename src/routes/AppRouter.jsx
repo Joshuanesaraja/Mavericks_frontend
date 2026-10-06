@@ -19,6 +19,7 @@ import PatientProfile from "../pages/Patients/PatientProfile";
 import PrescriptionDetails from "../pages/Prescriptions/PrescriptionDetails";
 import UserManagement from "../pages/Settings/UserManagement";
 import SecuritySettings from "../pages/Settings/SecuritySettings";
+import NotificationsPage from "../pages/Notifications/NotificationsPage";
 
 import DashboardLayout from "../components/layout/DashboardLayout";
 
@@ -172,11 +173,8 @@ function AppRouter() {
                         <ProtectedRoute>
                             <RoleBasedRoute
                                 allowedRoles={[
-                                    "Admin",
                                     "Provider",
                                     "Nurse",
-                                    "Patient",
-                                    "Pharmacist"
                                 ]}
                             >
                                 <DashboardLayout>
@@ -186,7 +184,23 @@ function AppRouter() {
                         </ProtectedRoute>
                     }
                 />
-
+                <Route
+                    path="/notifications"
+                    element={
+                        <ProtectedRoute>
+                            <RoleBasedRoute
+                                allowedRoles={[
+                                    "Provider",
+                                    "Nurse"
+                                ]}
+                            >
+                                <DashboardLayout>
+                                    <NotificationsPage />
+                                </DashboardLayout>
+                            </RoleBasedRoute>
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="/calendar"
                     element={

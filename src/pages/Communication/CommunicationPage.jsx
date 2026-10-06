@@ -896,9 +896,6 @@ function CommunicationPage() {
 
     const canCreateNotes =
         roles.includes(
-            "Admin"
-        ) ||
-        roles.includes(
             "Provider"
         ) ||
         roles.includes(

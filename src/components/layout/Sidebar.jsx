@@ -87,17 +87,17 @@ function Sidebar() {
         roles.includes("Patient") ||
         roles.includes("Pharmacist");
     const canAccessCommunication =
-        roles.includes("Admin") ||
         roles.includes("Provider") ||
-        roles.includes("Nurse") ||
-        roles.includes("Patient") ||
-        roles.includes("Pharmacist");
+        roles.includes("Nurse") 
     const canAccessCalendar =
         roles.includes("Admin") ||
         roles.includes("Provider") ||
         roles.includes("Nurse") ||
         roles.includes("Patient") ||
         roles.includes("Pharmacist");
+    <NavigationLink to="/notifications">
+        Notifications
+    </NavigationLink>
     const canAccessBilling =
         roles.includes("Admin") ||
         roles.includes("Provider") ||
