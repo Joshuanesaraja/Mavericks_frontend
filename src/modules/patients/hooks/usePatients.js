@@ -10,7 +10,7 @@ import {
     createPatientRequest,
     updatePatientRequest,
     deletePatientRequest,
-
+    getAllPatientsRequest,
     prefetchPatientsRequest,
     setCurrentPatientsFromBatch
 } from "../patientSlice";
@@ -23,7 +23,10 @@ import {
     selectPatientPagination,
     selectPatientLoadedBatches,
     selectPatientPrefetchLoading,
-    selectPatientPrefetchError
+    selectPatientPrefetchError,
+    selectAllPatients,
+    selectAllPatientsLoading,
+    selectAllPatientsError
 } from "../selectors";
 
 const PATIENT_BATCH_SIZE = 10;
@@ -68,7 +71,14 @@ export function usePatients() {
         useSelector(
             selectPatientPrefetchError
         );
+    const allPatients =
+        useSelector(selectAllPatients);
 
+    const allPatientsLoading =
+        useSelector(selectAllPatientsLoading);
+
+    const allPatientsError =
+        useSelector(selectAllPatientsError);
     /*
      * Normal API load.
      *
@@ -88,6 +98,13 @@ export function usePatients() {
             [dispatch]
         );
 
+        //load all patients
+    const loadAllPatients =
+        useCallback(() => {
+            dispatch(
+                getAllPatientsRequest()
+            );
+        }, [dispatch]);
     /*
      * Background API load.
      *
@@ -192,6 +209,11 @@ export function usePatients() {
         loadPatient,
         addPatient,
         editPatient,
-        removePatient
+        removePatient,
+
+        allPatients,
+        allPatientsLoading,
+        allPatientsError,
+        loadAllPatients
     };
 }

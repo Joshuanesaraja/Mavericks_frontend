@@ -29,3 +29,12 @@ export const selectPatientPrefetchError = (
     state
 ) =>
     state.patients.prefetchError;
+
+export const selectAllPatients = (state) =>
+    state.patients.allPatients;
+
+export const selectAllPatientsLoading = (state) =>
+    state.patients.allPatientsLoading;
+
+export const selectAllPatientsError = (state) =>
+    state.patients.allPatientsError;

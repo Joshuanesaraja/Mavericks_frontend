@@ -253,16 +253,6 @@ function getPatientId(patient) {
     return patient?.id;
 }
 
-function getPatientName(patient) {
-    if (patient?.encrypted_data) {
-        return patient.encrypted_data
-            .split(",")[0]
-            .trim();
-    }
-
-    return `Patient #${getPatientId(patient)}`;
-}
-
 
 function getProviderName(user) {
     return (
@@ -295,10 +285,10 @@ function AppointmentForm({
 
 
     const {
-        patients,
-        loading: patientsLoading,
-        error: patientsError,
-        loadPatients
+        allPatients,
+        allPatientsLoading,
+        allPatientsError,
+        loadAllPatients
     } = usePatients();
 
 
@@ -331,13 +321,9 @@ function AppointmentForm({
      * the appointment form opens.
      */
     useEffect(() => {
-        loadPatients();
+        loadAllPatients();
         loadProviders();
-    }, [
-        loadPatients,
-        loadProviders
-    ]);
-
+    }, [loadAllPatients, loadProviders]);
 
     /*
      * Populate the form when editing.
@@ -473,7 +459,7 @@ function AppointmentForm({
 
 
     const loadingPeople =
-        patientsLoading ||
+        allPatientsLoading ||
         providersLoading;
 
 
@@ -490,11 +476,11 @@ function AppointmentForm({
                 )}
 
 
-                {patientsError && (
+                {allPatientsError && (
                     <ErrorMessage>
                         Unable to load patients:
                         {" "}
-                        {patientsError}
+                        {allPatientsError}
                     </ErrorMessage>
                 )}
 
@@ -509,65 +495,41 @@ function AppointmentForm({
 
 
                 <Field>
-                    <Label
-                        htmlFor="appointment-patient"
-                    >
-                        Patient
+                    <Label htmlFor="appointment-patient">
+                        Patient ID
                     </Label>
 
                     <Select
                         id="appointment-patient"
                         name="patient_id"
                         value={patientId}
-                        onChange={(event) =>
-                            setPatientId(
-                                event.target.value
-                            )
-                        }
+                        onChange={(event) => setPatientId(event.target.value)}
                         required
-                        disabled={
-                            isSaving ||
-                            patientsLoading
-                        }
+                        disabled={isSaving || allPatientsLoading}
                     >
                         <option value="">
-                            {patientsLoading
+                            {allPatientsLoading
                                 ? "Loading patients..."
-                                : "Select patient"}
+                                : "Select patient ID"}
                         </option>
 
-                        {patients.map(
-                            (patient) => {
-                                const id =
-                                    getPatientId(
-                                        patient
-                                    );
+                        {allPatients.map((patient) => {
+                            const id = getPatientId(patient);
 
-                                if (!id) {
-                                    return null;
-                                }
+                            if (!id) return null;
 
-                                return (
-                                    <option
-                                        key={id}
-                                        value={id}
-                                    >
-                                        {getPatientName(
-                                            patient
-                                        )}
-                                    </option>
-                                );
-                            }
-                        )}
+                            return (
+                                <option key={id} value={id}>
+                                    {id}
+                                </option>
+                            );
+                        })}
                     </Select>
 
                     <HelpText>
-                        Select the patient for
-                        this appointment.
+                        Select the patient ID for this appointment.
                     </HelpText>
                 </Field>
-
-
                 <Field>
                     <Label
                         htmlFor="appointment-provider"

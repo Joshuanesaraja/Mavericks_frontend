@@ -6,6 +6,96 @@ import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
 import Loader from "../../components/common/Loader";
 
+const ReceiverSection =
+    styled.div`
+        display: flex;
+
+        align-items: center;
+
+        gap: ${({ theme }) =>
+            theme.spacing.sm};
+
+        padding:
+            ${({ theme }) =>
+                theme.spacing.md};
+
+        border-bottom:
+            1px solid
+            ${({ theme }) =>
+                theme.colors.border};
+
+        background:
+            ${({ theme }) =>
+                theme.colors.surface};
+    `;
+
+const ReceiverLabel =
+    styled.label`
+        color:
+            ${({ theme }) =>
+                theme.colors.text};
+
+        font-size:
+            ${({ theme }) =>
+                theme.typography.small};
+
+        font-weight: 600;
+
+        white-space: nowrap;
+    `;
+
+const ReceiverInput =
+    styled(Input)`
+        width: 180px;
+    `;
+
+const ReplyBanner =
+    styled.div`
+        display: flex;
+
+        align-items: center;
+
+        justify-content:
+            space-between;
+
+        gap: ${({ theme }) =>
+            theme.spacing.md};
+
+        padding:
+            ${({ theme }) =>
+                theme.spacing.sm}
+            ${({ theme }) =>
+                theme.spacing.md};
+
+        border-bottom:
+            1px solid
+            ${({ theme }) =>
+                theme.colors.border};
+
+        background:
+            ${({ theme }) =>
+                theme.colors.surfaceHover};
+
+        color:
+            ${({ theme }) =>
+                theme.colors.text};
+
+        font-size:
+            ${({ theme }) =>
+                theme.typography.small};
+    `;
+
+const ReplyText =
+    styled.div`
+        min-width: 0;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        white-space: nowrap;
+    `;
+
 const PageContainer =
     styled.div`
         display: flex;
@@ -894,6 +984,12 @@ function CommunicationPage() {
     const roles =
         user?.roles || [];
 
+    const isProvider =
+        roles.includes("Provider");
+
+    const isNurse =
+        roles.includes("Nurse");
+
     const canCreateNotes =
         roles.includes(
             "Provider"
@@ -927,6 +1023,16 @@ function CommunicationPage() {
         messageText,
         setMessageText
     ] = useState("");
+
+    const [
+        receiverId,
+        setReceiverId
+    ] = useState("");
+
+    const [
+        replyToMessage,
+        setReplyToMessage
+    ] = useState(null);
 
     const [
         noteText,
@@ -1047,19 +1153,68 @@ function CommunicationPage() {
     }, [
         resetChat
     ]);
+const handleSendMessage =
+    (event) => {
+        event.preventDefault();
 
-    const handleSendMessage =
-        (event) => {
-            event.preventDefault();
+        if (
+            !hasAppointment ||
+            !messageText.trim() ||
+            sendingMessage
+        ) {
+            return;
+        }
+
+        /*
+         * REPLY:
+         *
+         * Always use the original sender as
+         * receiver.
+         *
+         * This MUST take priority over the
+         * Nurse ID input.
+         */
+        if (replyToMessage) {
+            const replyReceiverId =
+                Number(
+                    replyToMessage.sender_id
+                );
 
             if (
-                !hasAppointment ||
-                !messageText.trim() ||
-                sendingMessage
+                replyReceiverId <= 0
             ) {
                 return;
             }
 
+            clearError();
+
+            sendMessage({
+                appointment_id:
+                    appointmentId,
+
+                receiver_id:
+                    replyReceiverId,
+
+                content:
+                    messageText.trim()
+            });
+
+            setMessageText("");
+
+            setReplyToMessage(
+                null
+            );
+
+            return;
+        }
+
+        /*
+         * NEW MESSAGE - NURSE
+         *
+         * Backend automatically determines
+         * the appointment Provider.
+         */
+        if (isNurse) {
             clearError();
 
             sendMessage({
@@ -1071,7 +1226,51 @@ function CommunicationPage() {
             });
 
             setMessageText("");
-        };
+
+            return;
+        }
+
+        /*
+         * NEW MESSAGE - PROVIDER
+         *
+         * Provider must have selected a Nurse.
+         */
+        if (isProvider) {
+            const newReceiverId =
+                Number(receiverId);
+
+            if (
+                newReceiverId <= 0
+            ) {
+                return;
+            }
+
+            clearError();
+
+            sendMessage({
+                appointment_id:
+                    appointmentId,
+
+                receiver_id:
+                    newReceiverId,
+
+                content:
+                    messageText.trim()
+            });
+
+            setMessageText("");
+
+            /*
+             * IMPORTANT:
+             *
+             * Do NOT clear receiverId.
+             *
+             * Provider can continue messaging
+             * the same Nurse without entering
+             * the Nurse ID again.
+             */
+        }
+    };
 
     const handleCreateNote =
         (event) => {
@@ -1398,6 +1597,20 @@ function CommunicationPage() {
                                                                 message.created_at
                                                             )}
                                                         </MessageTime>
+                                                        {!mine && (
+                                                        <TextButton
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setReplyToMessage(
+                                                                    message
+                                                                );
+
+                                                                setMessageText("");
+                                                            }}
+                                                        >
+                                                            Reply
+                                                        </TextButton>
+                                                    )}
                                                     </MessageBubble>
                                                 </MessageRow>
                                             );
@@ -1405,12 +1618,57 @@ function CommunicationPage() {
                                     )}
                                 </ScrollArea>
                             )}
+                                {isProvider && (
+                                <ReceiverSection>
+                                    <ReceiverLabel
+                                        htmlFor="message-receiver-id"
+                                    >
+                                        Nurse ID
+                                    </ReceiverLabel>
 
+                                    <ReceiverInput
+                                        id="message-receiver-id"
+                                        type="number"
+                                        min="1"
+                                        placeholder="Enter Nurse ID"
+                                        value={receiverId}
+                                        onChange={(event) =>
+                                            setReceiverId(
+                                                event.target.value
+                                            )
+                                        }
+                                        disabled={
+                                            sendingMessage ||
+                                            Boolean(replyToMessage)
+                                        }
+                                    />
+                                </ReceiverSection>
+                            )}
                             <form
                                 onSubmit={
                                     handleSendMessage
                                 }
                             >
+                                {replyToMessage && (
+                                <ReplyBanner>
+                                    <ReplyText>
+                                        Replying to{" "}
+                                        {replyToMessage.sender_name ||
+                                            `User #${replyToMessage.sender_id}`}
+                                    </ReplyText>
+
+                                    <TextButton
+                                        type="button"
+                                        onClick={() =>
+                                            setReplyToMessage(
+                                                null
+                                            )
+                                        }
+                                    >
+                                        Cancel
+                                    </TextButton>
+                                </ReplyBanner>
+                            )}
                                 <Composer>
                                     <MessageInput
                                         value={

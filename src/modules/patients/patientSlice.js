@@ -40,7 +40,11 @@ const initialState = {
     prefetchPage: null,
     prefetchError: null,
 
-    error: null
+    error: null,
+
+    allPatients: [],
+    allPatientsLoading: false,
+    allPatientsError: null
 };
 
 const normalizePagination = (
@@ -86,6 +90,23 @@ const patientSlice = createSlice({
     initialState,
 
     reducers: {
+        getAllPatientsRequest: (state) => {
+            state.allPatientsLoading = true;
+            state.allPatientsError = null;
+        },
+
+        getAllPatientsSuccess: (state, action) => {
+            state.allPatientsLoading = false;
+            state.allPatients = Array.isArray(action.payload)
+                ? action.payload
+                : [];
+            state.allPatientsError = null;
+        },
+
+        getAllPatientsFailure: (state, action) => {
+            state.allPatientsLoading = false;
+            state.allPatientsError = action.payload;
+        },
         /*
          * =========================================================
          * CURRENT PAGE FETCH
@@ -461,7 +482,11 @@ export const {
     deletePatientSuccess,
     deletePatientFailure,
 
-    clearPatientError
+    clearPatientError,
+
+    getAllPatientsRequest,
+    getAllPatientsSuccess,
+    getAllPatientsFailure
 } = patientSlice.actions;
 
 export default patientSlice.reducer;

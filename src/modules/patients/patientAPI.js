@@ -12,6 +12,10 @@ export function getPatients({
     });
 }
 
+export function getAllPatients() {
+    return apiService.get("/patients/all");
+}
+
 export function getPatientById(id) {
     return apiService.get(`/patients/${id}`);
 }

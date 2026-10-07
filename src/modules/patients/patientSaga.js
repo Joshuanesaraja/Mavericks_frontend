@@ -6,6 +6,7 @@ import {
 
 import {
     getPatients,
+    getAllPatients,
     getPatientById,
     createPatient,
     updatePatient,
@@ -16,6 +17,10 @@ import {
     getPatientsRequest,
     getPatientsSuccess,
     getPatientsFailure,
+
+    getAllPatientsRequest,
+    getAllPatientsSuccess,
+    getAllPatientsFailure,
 
     prefetchPatientsRequest,
     prefetchPatientsSuccess,
@@ -37,6 +42,32 @@ import {
     deletePatientSuccess,
     deletePatientFailure
 } from "./patientSlice";
+
+
+function* handleGetAllPatients() {
+    try {
+        const response = yield call(
+            getAllPatients
+        );
+
+        const data = getResponseData(response);
+
+        const patients =
+            Array.isArray(data)
+                ? data
+                : data?.patients || [];
+
+        yield put(
+            getAllPatientsSuccess(patients)
+        );
+    } catch (error) {
+        yield put(
+            getAllPatientsFailure(
+                getErrorMessage(error)
+            )
+        );
+    }
+}
 
 function getErrorMessage(error) {
     return (
@@ -295,5 +326,10 @@ export default function* patientSaga() {
     yield takeLatest(
         deletePatientRequest.type,
         handleDeletePatient
+    );
+
+    yield takeLatest(
+        getAllPatientsRequest.type,
+        handleGetAllPatients
     );
 }
