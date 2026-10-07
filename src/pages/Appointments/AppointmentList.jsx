@@ -56,6 +56,95 @@ const HeaderActions = styled.div`
     flex-wrap: wrap;
 `;
 
+const ConnectivityBanner = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: ${({ theme }) =>
+        theme.spacing.md};
+
+    padding: ${({ theme }) =>
+        theme.spacing.md};
+
+    border: 1px solid
+        ${({ theme, $online }) =>
+            $online
+                ? theme.colors.success
+                : theme.colors.warning};
+
+    border-radius:
+        ${({ theme }) =>
+            theme.radius.md};
+
+    background:
+        ${({ $online }) =>
+            $online
+                ? "rgba(22, 163, 74, 0.08)"
+                : "rgba(217, 119, 6, 0.08)"};
+
+    color:
+        ${({ theme }) =>
+            theme.colors.text};
+
+    @media (max-width: 700px) {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+`;
+
+const ConnectivityText = styled.div`
+    display: flex;
+    flex-direction: column;
+
+    gap: ${({ theme }) =>
+        theme.spacing.xs};
+`;
+
+const ConnectivityTitle = styled.strong`
+    color:
+        ${({ theme }) =>
+            theme.colors.text};
+`;
+
+const ConnectivityDescription = styled.span`
+    color:
+        ${({ theme }) =>
+            theme.colors.textSecondary};
+
+    font-size:
+        ${({ theme }) =>
+            theme.typography.small};
+`;
+
+const QueueBadge = styled.span`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 32px;
+
+    padding: 6px 10px;
+
+    border-radius:
+        ${({ theme }) =>
+            theme.radius.pill};
+
+    background:
+        ${({ theme }) =>
+            theme.colors.surface};
+
+    color:
+        ${({ theme }) =>
+            theme.colors.text};
+
+    font-size:
+        ${({ theme }) =>
+            theme.typography.small};
+
+    font-weight: 600;
+`;
+
 const Section = styled.section`
     display: flex;
     flex-direction: column;
@@ -445,6 +534,14 @@ function getStatusLabel(status) {
         );
 }
 
+function isPendingAppointment(appointment) {
+    return (
+        appointment?.syncStatus === "pending" ||
+        Boolean(appointment?.offlineQueueId) ||
+        String(appointment?.id ?? "").startsWith("offline-")
+    );
+}
+
 function AppointmentList() {
     const user = useSelector(
         (state) => state.auth?.user
@@ -479,6 +576,9 @@ function AppointmentList() {
         cancelling,
         error,
         successMessage,
+        isOnline,
+        queuedAppointments,
+        syncingQueuedAppointments,
         getAppointments,
         getUpcomingAppointments,
         getAppointment,
@@ -486,7 +586,7 @@ function AppointmentList() {
         updateAppointmentStatus,
         clearError,
         clearSuccess,
-        clearSelected
+        clearSelected,
     } = useAppointments();
 
     const [
@@ -520,12 +620,17 @@ function AppointmentList() {
     ] = useState("");
 
     useEffect(() => {
+        if (!isOnline) {
+            return;
+        }
+
         getAppointments();
 
         if (canViewUpcoming) {
             getUpcomingAppointments();
         }
     }, [
+        isOnline,
         getAppointments,
         getUpcomingAppointments,
         canViewUpcoming
@@ -536,10 +641,21 @@ function AppointmentList() {
             return;
         }
 
-        getAppointments();
+        const wasOfflineQueued =
+            successMessage ===
+            "Appointment saved offline. It will be synced automatically when you are online.";
 
-        if (canViewUpcoming) {
-            getUpcomingAppointments();
+        /*
+        * Offline queue already exists in Redux.
+        *
+        * Don't make an API request while offline.
+        */
+        if (!wasOfflineQueued) {
+            getAppointments();
+
+            if (canViewUpcoming) {
+                getUpcomingAppointments();
+            }
         }
 
         clearSuccess();
@@ -553,7 +669,6 @@ function AppointmentList() {
         clearSuccess,
         canViewUpcoming
     ]);
-
     const columns = useMemo(
         () => [
             {
@@ -695,7 +810,10 @@ function AppointmentList() {
                                 getUpcomingAppointments();
                             }
                         }}
-                        disabled={loading}
+                        disabled={
+                                loading ||
+                                !isOnline
+                            }
                     >
                         Refresh
                     </OutlineButton>
@@ -710,7 +828,33 @@ function AppointmentList() {
                     )}
                 </HeaderActions>
             </PageHeader>
+            <ConnectivityBanner
+                $online={isOnline}
+            >
+                <ConnectivityText>
+                    <ConnectivityTitle>
+                        {isOnline
+                            ? "Online"
+                            : "Offline"}
+                    </ConnectivityTitle>
 
+                    <ConnectivityDescription>
+                        {isOnline
+                            ? syncingQueuedAppointments
+                                ? "Syncing saved offline appointments..."
+                                : queuedAppointments.length > 0
+                                    ? "Your saved offline appointments are waiting to sync."
+                                    : "Appointments will be saved directly to the server."
+                            : "New appointments are saved on this device and will sync automatically when the connection returns."}
+                    </ConnectivityDescription>
+                </ConnectivityText>
+
+                {queuedAppointments.length > 0 && (
+                    <QueueBadge>
+                        {queuedAppointments.length} pending
+                    </QueueBadge>
+                )}
+            </ConnectivityBanner>    
             {error && (
                 <ErrorMessage>
                     {error}
@@ -764,12 +908,14 @@ function AppointmentList() {
 
                                                 <StatusBadge
                                                     $status={
-                                                        appointment.status
+                                                        isPendingAppointment(appointment)
+                                                            ? "no-show"
+                                                            : appointment.status
                                                     }
                                                 >
-                                                    {getStatusLabel(
-                                                        appointment.status
-                                                    )}
+                                                    {isPendingAppointment(appointment)
+                                                        ? "Pending sync"
+                                                        : getStatusLabel(appointment.status)}
                                                 </StatusBadge>
                                             </AppointmentHeading>
 
@@ -803,34 +949,31 @@ function AppointmentList() {
                                             </AppointmentMeta>
 
                                             <CardActions>
-                                                <OutlineButton
+                                            <OutlineButton
+                                                type="button"
+                                                onClick={() => openDetails(appointment)}
+                                                disabled={
+                                                    !isOnline ||
+                                                    isPendingAppointment(appointment)
+                                                }
+                                            >
+                                                Details
+                                            </OutlineButton>
+
+                                            {canManageAppointments && (
+                                                <Button
                                                     type="button"
-                                                    onClick={() =>
-                                                        openDetails(
-                                                            appointment
-                                                        )
+                                                    onClick={() => openEdit(appointment)}
+                                                    disabled={
+                                                        !isOnline ||
+                                                        isPendingAppointment(appointment) ||
+                                                        appointment.status === "cancelled"
                                                     }
                                                 >
-                                                    Details
-                                                </OutlineButton>
-
-                                                {canManageAppointments && (
-                                                    <Button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openEdit(
-                                                                appointment
-                                                            )
-                                                        }
-                                                        disabled={
-                                                            appointment.status ===
-                                                            "cancelled"
-                                                        }
-                                                    >
-                                                        Reschedule
-                                                    </Button>
-                                                )}
-                                            </CardActions>
+                                                    Reschedule
+                                                </Button>
+                                            )}
+                                        </CardActions>
                                         </UpcomingCard>
                                     )
                                 )}
@@ -909,65 +1052,60 @@ function AppointmentList() {
 
                                 <Cell>
                                     <TableActions>
-                                        <SmallButton
-                                            type="button"
-                                            onClick={() =>
-                                                openDetails(
-                                                    appointment
-                                                )
-                                            }
-                                        >
-                                            View
-                                        </SmallButton>
-
+                                        {isOnline &&
+                                        !isPendingAppointment(appointment) && (
+                                            <SmallButton
+                                                type="button"
+                                                onClick={() => openDetails(appointment)}
+                                            >
+                                                View
+                                            </SmallButton>
+                                        )}
                                         {canManageAppointments && (
                                             <>
                                                 <SmallButton
                                                     type="button"
-                                                    onClick={() =>
-                                                        openEdit(
-                                                            appointment
-                                                        )
-                                                    }
+                                                    onClick={() => openEdit(appointment)}
                                                     disabled={
-                                                        appointment.status ===
-                                                        "cancelled"
+                                                        !isOnline ||
+                                                        isPendingAppointment(appointment) ||
+                                                        appointment.status === "cancelled"
                                                     }
                                                 >
                                                     Edit
                                                 </SmallButton>
 
-                                                {appointment.status !==
-                                                    "cancelled" && (
-                                                        <DangerSmallButton
-                                                            type="button"
-                                                            onClick={() =>
-                                                                openCancel(
-                                                                    appointment
-                                                                )
-                                                            }
-                                                        >
-                                                            Cancel
-                                                        </DangerSmallButton>
-                                                    )}
+                                                {appointment.status !== "cancelled" && (
+                                                    <DangerSmallButton
+                                                        type="button"
+                                                        onClick={() => openCancel(appointment)}
+                                                        disabled={
+                                                            !isOnline ||
+                                                            isPendingAppointment(appointment)
+                                                        }
+                                                    >
+                                                        Cancel
+                                                    </DangerSmallButton>
+                                                )}
 
-                                                {appointment.status ===
-                                                    "scheduled" && (
-                                                        <SmallButton
-                                                            type="button"
-                                                            onClick={() =>
-                                                                updateAppointmentStatus(
-                                                                    appointment.id,
-                                                                    "confirmed"
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                updating
-                                                            }
-                                                        >
-                                                            Confirm
-                                                        </SmallButton>
-                                                    )}
+                                                {appointment.status === "scheduled" && (
+                                                    <SmallButton
+                                                        type="button"
+                                                        onClick={() =>
+                                                            updateAppointmentStatus(
+                                                                appointment.id,
+                                                                "confirmed"
+                                                            )
+                                                        }
+                                                        disabled={
+                                                            updating ||
+                                                            !isOnline ||
+                                                            isPendingAppointment(appointment)
+                                                        }
+                                                    >
+                                                        Confirm
+                                                    </SmallButton>
+                                                )}
                                             </>
                                         )}
                                     </TableActions>

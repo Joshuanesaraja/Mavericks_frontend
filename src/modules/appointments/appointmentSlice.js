@@ -20,8 +20,17 @@ const initialState = {
 
     error: null,
     conflict: null,
-    successMessage: null
-};
+    successMessage: null,
+
+    isOnline:
+        typeof navigator !== "undefined"
+            ? navigator.onLine
+            : true,
+
+    queuedAppointments: [],
+
+    syncingQueuedAppointments: false
+    };
 
 const appointmentSlice = createSlice({
     name: "appointments",
@@ -42,9 +51,19 @@ const appointmentSlice = createSlice({
 
             const data = response?.data;
 
-            state.appointments = Array.isArray(data)
-                ? data
-                : data?.appointments || [];
+            const serverAppointments =
+                Array.isArray(data)
+                    ? data
+                    : data?.appointments || [];
+
+            /*
+            * Never lose appointments that are waiting
+            * in the offline queue.
+            */
+            state.appointments = [
+                ...state.queuedAppointments,
+                ...serverAppointments
+            ];
         },
 
         fetchAppointmentsFailure(state, action) {
@@ -67,9 +86,27 @@ const appointmentSlice = createSlice({
 
             const data = response?.data;
 
-            state.upcoming = Array.isArray(data)
-                ? data
-                : data?.appointments || [];
+            const serverAppointments =
+                Array.isArray(data)
+                    ? data
+                    : data?.appointments || [];
+
+            state.upcoming = [
+                ...state.queuedAppointments.filter(
+                    (appointment) =>
+                        appointment.status !==
+                            "cancelled" &&
+                        new Date(
+                            appointment.start_at
+                        ) >= new Date()
+                ),
+
+                ...serverAppointments
+            ].sort(
+                (a, b) =>
+                    new Date(a.start_at) -
+                    new Date(b.start_at)
+            );
         },
 
         fetchUpcomingFailure(state, action) {
@@ -106,6 +143,291 @@ const appointmentSlice = createSlice({
             state.error = null;
             state.conflict = null;
             state.successMessage = null;
+        },
+
+        createAppointmentQueued(
+            state,
+            action
+        ) {
+            state.creating = false;
+            state.error = null;
+            state.conflict = null;
+
+            const {
+                queueId,
+                appointment
+            } = action.payload || {};
+
+            if (
+                !queueId ||
+                !appointment
+            ) {
+                return;
+            }
+
+            const queuedAppointment = {
+                ...appointment,
+
+                /*
+                * Temporary browser-only ID.
+                */
+                id: `offline-${queueId}`,
+
+                localQueueId:
+                    queueId,
+
+                syncStatus:
+                    "pending",
+
+                status:
+                    appointment.status ||
+                    "scheduled"
+            };
+
+            state.queuedAppointments = [
+                ...state.queuedAppointments.filter(
+                    (item) =>
+                        item.localQueueId !==
+                        queueId
+                ),
+
+                queuedAppointment
+            ];
+
+            state.appointments = [
+                queuedAppointment,
+                ...state.appointments
+            ];
+
+            const upcomingDate =
+                new Date(
+                    queuedAppointment.start_at
+                );
+
+            if (
+                queuedAppointment.status !==
+                    "cancelled" &&
+                !Number.isNaN(
+                    upcomingDate.getTime()
+                ) &&
+                upcomingDate >= new Date()
+            ) {
+                state.upcoming = [
+                    queuedAppointment,
+                    ...state.upcoming
+                ].sort(
+                    (a, b) =>
+                        new Date(a.start_at) -
+                        new Date(b.start_at)
+                );
+            }
+
+            state.successMessage =
+                "Appointment saved offline. It will be synced automatically when you are online.";
+        },
+
+        createAppointmentSynced(
+            state,
+            action
+        ) {
+            state.creating = false;
+            state.error = null;
+            state.conflict = null;
+
+            const {
+                queueId,
+                appointment
+            } = action.payload || {};
+
+            /*
+            * Remove from Redux queue.
+            */
+            state.queuedAppointments =
+                state.queuedAppointments.filter(
+                    (item) =>
+                        item.localQueueId !==
+                        queueId
+                );
+
+            /*
+            * Remove temporary offline appointment.
+            */
+            state.appointments =
+                state.appointments
+                    .filter(
+                        (item) =>
+                            item.localQueueId !==
+                            queueId
+                    )
+                    .filter(
+                        (item) =>
+                            !appointment?.id ||
+                            String(item.id) !==
+                                String(
+                                    appointment.id
+                                )
+                    );
+
+            /*
+            * Add the real server appointment.
+            */
+            if (appointment) {
+                state.appointments = [
+                    appointment,
+                    ...state.appointments
+                ];
+
+                const upcomingDate =
+                    new Date(
+                        appointment.start_at
+                    );
+
+                if (
+                    appointment.status !==
+                        "cancelled" &&
+                    !Number.isNaN(
+                        upcomingDate.getTime()
+                    ) &&
+                    upcomingDate >= new Date()
+                ) {
+                    state.upcoming = [
+                        appointment,
+
+                        ...state.upcoming.filter(
+                            (item) =>
+                                item.localQueueId !==
+                                    queueId &&
+                                (
+                                    !appointment.id ||
+                                    String(item.id) !==
+                                        String(
+                                            appointment.id
+                                        )
+                                )
+                        )
+                    ].sort(
+                        (a, b) =>
+                            new Date(a.start_at) -
+                            new Date(b.start_at)
+                    );
+                }
+            }
+
+            state.successMessage =
+                "Offline appointment synced successfully.";
+        },
+
+        createAppointmentQueueFailure(
+            state,
+            action
+        ) {
+            state.creating = false;
+
+            const {
+                queueId,
+                message
+            } = action.payload || {};
+
+            state.queuedAppointments =
+                state.queuedAppointments.filter(
+                    (item) =>
+                        item.localQueueId !==
+                        queueId
+                );
+
+            state.appointments =
+                state.appointments.filter(
+                    (item) =>
+                        item.localQueueId !==
+                        queueId
+                );
+
+            state.upcoming =
+                state.upcoming.filter(
+                    (item) =>
+                        item.localQueueId !==
+                        queueId
+                );
+
+            state.error =
+                message ||
+                "Offline appointment could not be synced.";
+        },
+
+        hydrateQueuedAppointments(
+            state,
+            action
+        ) {
+            const queued =
+                Array.isArray(action.payload)
+                    ? action.payload
+                    : [];
+
+            state.queuedAppointments =
+                queued;
+
+            const queuedIds =
+                new Set(
+                    queued.map(
+                        (appointment) =>
+                            appointment.localQueueId
+                    )
+                );
+
+            state.appointments = [
+                ...queued,
+
+                ...state.appointments.filter(
+                    (appointment) =>
+                        !queuedIds.has(
+                            appointment.localQueueId
+                        )
+                )
+            ];
+
+            state.upcoming = [
+                ...queued.filter(
+                    (appointment) =>
+                        appointment.status !==
+                            "cancelled" &&
+                        new Date(
+                            appointment.start_at
+                        ) >= new Date()
+                ),
+
+                ...state.upcoming.filter(
+                    (appointment) =>
+                        !queuedIds.has(
+                            appointment.localQueueId
+                        )
+                )
+            ].sort(
+                (a, b) =>
+                    new Date(a.start_at) -
+                    new Date(b.start_at)
+            );
+        },
+
+        setOnlineStatus(
+            state,
+            action
+        ) {
+            state.isOnline =
+                Boolean(action.payload);
+        },
+
+        syncQueuedAppointmentsRequest(
+            state
+        ) {
+            state.syncingQueuedAppointments =
+                true;
+        },
+
+        syncQueuedAppointmentsFinished(
+            state
+        ) {
+            state.syncingQueuedAppointments =
+                false;
         },
 
         createAppointmentSuccess(state, action) {
@@ -454,13 +776,19 @@ export const {
     createAppointmentSuccess,
     createAppointmentFailure,
 
+    createAppointmentQueued,
+    createAppointmentSynced,
+    createAppointmentQueueFailure,
+
+    hydrateQueuedAppointments,
+    setOnlineStatus,
+
+    syncQueuedAppointmentsRequest,
+    syncQueuedAppointmentsFinished,
+
     updateAppointmentRequest,
     updateAppointmentSuccess,
     updateAppointmentFailure,
-
-    fetchProvidersRequest,
-    fetchProvidersSuccess,
-    fetchProvidersFailure,
 
     cancelAppointmentRequest,
     cancelAppointmentSuccess,
@@ -470,11 +798,15 @@ export const {
     updateAppointmentStatusSuccess,
     updateAppointmentStatusFailure,
 
+    fetchProvidersRequest,
+    fetchProvidersSuccess,
+    fetchProvidersFailure,
+
     clearAppointmentError,
     clearAppointmentSuccess,
     clearSelectedAppointment,
-
     resetAppointmentState
+    
 } = appointmentSlice.actions;
 
 export default appointmentSlice.reducer;
