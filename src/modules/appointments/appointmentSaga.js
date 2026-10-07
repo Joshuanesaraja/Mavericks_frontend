@@ -18,7 +18,9 @@ import appointmentAPI from "./appointmentAPI";
 import {
     addQueuedAppointment,
     getQueuedAppointments,
-    removeQueuedAppointment
+    removeQueuedAppointment,
+    saveCachedProviders,
+    getCachedProviders
 } from "./appointmentOfflineDB";
 
 import {
@@ -89,16 +91,16 @@ function getResponseData(response) {
 function isNetworkError(error) {
     return (
         typeof navigator !==
-            "undefined" &&
+        "undefined" &&
         !navigator.onLine
     ) ||
         (
             !error?.response &&
             (
                 error?.code ===
-                    "ERR_NETWORK" ||
+                "ERR_NETWORK" ||
                 error?.code ===
-                    "ECONNABORTED"
+                "ECONNABORTED"
             )
         );
 }
@@ -172,10 +174,41 @@ function* fetchUpcomingWorker() {
  */
 
 function* fetchProvidersWorker() {
-    if (
-        typeof navigator !== "undefined" &&
-        !navigator.onLine
-    ) {
+    const isOnline =
+        typeof navigator === "undefined"
+            ? true
+            : navigator.onLine;
+
+    if (!isOnline) {
+        try {
+            const cachedProviders =
+                yield call(
+                    getCachedProviders
+                );
+
+            if (cachedProviders.length > 0) {
+                yield put(
+                    fetchProvidersSuccess({
+                        data: cachedProviders
+                    })
+                );
+
+                return;
+            }
+
+            yield put(
+                fetchProvidersFailure(
+                    "No cached providers available while offline."
+                )
+            );
+        } catch (error) {
+            yield put(
+                fetchProvidersFailure(
+                    "Unable to load providers offline."
+                )
+            );
+        }
+
         return;
     }
 
@@ -185,12 +218,55 @@ function* fetchProvidersWorker() {
                 appointmentAPI.getProviders
             );
 
+        const responseData =
+            getResponseData(response);
+
+        const data =
+            responseData.data;
+
+        const providers =
+            Array.isArray(data)
+                ? data
+                : data?.providers || [];
+
+        try {
+            yield call(
+                saveCachedProviders,
+                providers
+            );
+        } catch (cacheError) {
+            // Cache failure should not block the online response.
+        }
+
         yield put(
-            fetchProvidersSuccess(
-                getResponseData(response)
-            )
+            fetchProvidersSuccess({
+                data: providers,
+                message:
+                    responseData.message
+            })
         );
     } catch (error) {
+        if (isNetworkError(error)) {
+            try {
+                const cachedProviders =
+                    yield call(
+                        getCachedProviders
+                    );
+
+                if (cachedProviders.length > 0) {
+                    yield put(
+                        fetchProvidersSuccess({
+                            data: cachedProviders
+                        })
+                    );
+
+                    return;
+                }
+            } catch (cacheError) {
+                // Fall through to the normal error.
+            }
+        }
+
         yield put(
             fetchProvidersFailure(
                 getErrorMessage(error)
@@ -250,7 +326,7 @@ function* createAppointmentWorker(
      */
     if (
         typeof navigator !==
-            "undefined" &&
+        "undefined" &&
         !navigator.onLine
     ) {
         try {
@@ -558,7 +634,7 @@ function* syncQueuedAppointmentsWorker() {
                     ) {
                         if (
                             typeof navigator !==
-                                "undefined" &&
+                            "undefined" &&
                             !navigator.onLine
                         ) {
                             break;

@@ -6,7 +6,9 @@ const initialState = {
     loading: false,
     error: null,
     initialized: false,
-    registration: null
+    registration: null,
+    csrfLoading: false,
+    csrfError: null,
 };
 
 const authSlice = createSlice({
@@ -104,6 +106,21 @@ const authSlice = createSlice({
             state.error = action.payload;
         },
 
+        initializeCsrfRequest: (state) => {
+            state.csrfLoading = true;
+            state.csrfError = null;
+        },
+
+        initializeCsrfSuccess: (state) => {
+            state.csrfLoading = false;
+            state.csrfError = null;
+        },
+
+        initializeCsrfFailure: (state, action) => {
+            state.csrfLoading = false;
+            state.csrfError = action.payload;
+        },
+
         clearAuthError: (state) => {
             state.error = null;
         }
@@ -112,6 +129,9 @@ const authSlice = createSlice({
 
 export const {
     loginRequest,
+    initializeCsrfRequest,
+    initializeCsrfSuccess,
+    initializeCsrfFailure,
     registerRequest,
     registerSuccess,
     registerFailure,

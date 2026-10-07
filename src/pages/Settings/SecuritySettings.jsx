@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { useAuth } from "../../modules/auth/hooks/useAuth";
@@ -96,6 +96,18 @@ const ErrorMessage = styled.div`
     color: ${({ theme }) => theme.colors.danger};
 `;
 
+const SuccessMessage = styled.div`
+    margin-bottom: ${({ theme }) => theme.spacing.lg};
+
+    padding: ${({ theme }) => theme.spacing.md};
+
+    border: 1px solid ${({ theme }) => theme.colors.success};
+    border-radius: ${({ theme }) => theme.radius.md};
+
+    background: rgba(34, 197, 94, 0.08);
+    color: ${({ theme }) => theme.colors.success};
+`;
+
 const SecurityInfo = styled.div`
     margin-top: ${({ theme }) => theme.spacing.xl};
 
@@ -140,12 +152,30 @@ function SecuritySettings() {
     const [confirmPassword, setConfirmPassword] =
         useState("");
 
+    const [success, setSuccess] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+
+    useEffect(() => {
+        if (submitted && !loading && !error) {
+            setSuccess(true);
+
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+
+            setSubmitted(false);
+        }
+    }, [submitted, loading, error]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
         if (newPassword !== confirmPassword) {
             return;
         }
+
+        setSuccess(false);
+        setSubmitted(true);
 
         changePassword({
             current_password: currentPassword,
@@ -187,6 +217,12 @@ function SecuritySettings() {
                             Clear Error
                         </Button>
                     </ErrorMessage>
+                )}
+
+                {success && (
+                    <SuccessMessage>
+                        Password changed successfully.
+                    </SuccessMessage>
                 )}
 
                 <Form onSubmit={handleSubmit}>

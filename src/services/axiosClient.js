@@ -57,11 +57,18 @@ axiosClient.interceptors.response.use(
         }
 
         const originalRequest = error.config;
+        const requestUrl = originalRequest?.url || "";
+
+        const isAuthRequest =
+            requestUrl === "/login" ||
+            requestUrl === "/register" ||
+            requestUrl === "/refresh" ||
+            requestUrl === "/logout";
 
         if (
             error.response?.status !== 401 ||
             originalRequest?._retry ||
-            originalRequest?.url === "/refresh"
+            isAuthRequest
         ) {
             return Promise.reject(error);
         }

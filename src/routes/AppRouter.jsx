@@ -37,8 +37,16 @@ const LoginPage = lazy(() =>
 );
 
 function AuthInitializer() {
-    const { loadProfile } = useAuth();
+    const { loadProfile, initializeCsrf } = useAuth();
     const location = useLocation();
+
+    useEffect(() => {
+        const tenant = getTenantSubdomain();
+
+        if (tenant) {
+            initializeCsrf();
+        }
+    }, [initializeCsrf]);
 
     useEffect(() => {
         const tenant = getTenantSubdomain();
@@ -155,10 +163,7 @@ function AppRouter() {
                         <ProtectedRoute>
                             <RoleBasedRoute
                                 allowedRoles={[
-                                    "Admin",
                                     "Provider",
-                                    "Nurse",
-                                    "Patient",
                                     "Pharmacist"
                                 ]}
                             >
@@ -176,10 +181,7 @@ function AppRouter() {
                         <ProtectedRoute>
                             <RoleBasedRoute
                                 allowedRoles={[
-                                    "Admin",
                                     "Provider",
-                                    "Nurse",
-                                    "Patient",
                                     "Pharmacist"
                                 ]}
                             >

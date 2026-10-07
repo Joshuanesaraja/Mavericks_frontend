@@ -81,14 +81,11 @@ function Sidebar() {
         roles.includes("Nurse") ||
         roles.includes("Patient");
     const canAccessPrescriptions =
-        roles.includes("Admin") ||
         roles.includes("Provider") ||
-        roles.includes("Nurse") ||
-        roles.includes("Patient") ||
         roles.includes("Pharmacist");
     const canAccessCommunication =
         roles.includes("Provider") ||
-        roles.includes("Nurse") 
+        roles.includes("Nurse")
     const canAccessCalendar =
         roles.includes("Admin") ||
         roles.includes("Provider") ||

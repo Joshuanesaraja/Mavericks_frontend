@@ -4,7 +4,8 @@ import {
 } from "../../services/encryptionService";
 
 const DB_NAME = "healthcare-app";
-const DB_VERSION = 1;
+// const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "appointmentQueue";
 
 let dbPromise = null;
@@ -33,24 +34,37 @@ function openDatabase() {
         request.onupgradeneeded = () => {
             const db = request.result;
 
-            if (
-                !db.objectStoreNames.contains(
-                    STORE_NAME
-                )
-            ) {
-                const store =
-                    db.createObjectStore(
-                        STORE_NAME,
-                        {
-                            keyPath: "id"
-                        }
-                    );
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                const store = db.createObjectStore(
+                    STORE_NAME,
+                    {
+                        keyPath: "id"
+                    }
+                );
 
                 store.createIndex(
                     "createdAt",
                     "createdAt",
                     {
                         unique: false
+                    }
+                );
+            }
+
+            if (!db.objectStoreNames.contains("patientCache")) {
+                db.createObjectStore(
+                    "patientCache",
+                    {
+                        keyPath: "id"
+                    }
+                );
+            }
+
+            if (!db.objectStoreNames.contains("providerCache")) {
+                db.createObjectStore(
+                    "providerCache",
+                    {
+                        keyPath: "id"
                     }
                 );
             }
@@ -217,4 +231,140 @@ export async function removeQueuedAppointment(
                 );
         }
     );
+}
+
+// to load both patient and provider in offline
+
+export async function saveCachedPatients(patients) {
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            "patientCache",
+            "readwrite"
+        );
+
+        const store = transaction.objectStore(
+            "patientCache"
+        );
+
+        store.put({
+            id: "all",
+            updatedAt: Date.now(),
+            payload: encryptData(patients)
+        });
+
+        transaction.oncomplete = () => {
+            resolve();
+        };
+
+        transaction.onerror = () => {
+            reject(transaction.error);
+        };
+    });
+}
+
+export async function getCachedPatients() {
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            "patientCache",
+            "readonly"
+        );
+
+        const store = transaction.objectStore(
+            "patientCache"
+        );
+
+        const request = store.get("all");
+
+        request.onsuccess = () => {
+            const record = request.result;
+
+            if (!record?.payload) {
+                resolve([]);
+                return;
+            }
+
+            try {
+                resolve(
+                    decryptData(record.payload)
+                );
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+    });
+}
+
+export async function saveCachedProviders(providers) {
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            "providerCache",
+            "readwrite"
+        );
+
+        const store = transaction.objectStore(
+            "providerCache"
+        );
+
+        store.put({
+            id: "all",
+            updatedAt: Date.now(),
+            payload: encryptData(providers)
+        });
+
+        transaction.oncomplete = () => {
+            resolve();
+        };
+
+        transaction.onerror = () => {
+            reject(transaction.error);
+        };
+    });
+}
+
+export async function getCachedProviders() {
+    const db = await openDatabase();
+
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction(
+            "providerCache",
+            "readonly"
+        );
+
+        const store = transaction.objectStore(
+            "providerCache"
+        );
+
+        const request = store.get("all");
+
+        request.onsuccess = () => {
+            const record = request.result;
+
+            if (!record?.payload) {
+                resolve([]);
+                return;
+            }
+
+            try {
+                resolve(
+                    decryptData(record.payload)
+                );
+            } catch (error) {
+                reject(error);
+            }
+        };
+
+        request.onerror = () => {
+            reject(request.error);
+        };
+    });
 }

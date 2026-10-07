@@ -336,16 +336,8 @@ const patientSlice = createSlice({
             state.error = null;
         },
 
-        createPatientSuccess: (
-            state,
-            action
-        ) => {
+        createPatientSuccess: (state) => {
             state.loading = false;
-
-            state.patients.push(
-                action.payload
-            );
-
             state.error = null;
         },
 

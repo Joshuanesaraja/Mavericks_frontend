@@ -28,7 +28,10 @@ import {
     logoutFailure,
     changePasswordRequest,
     changePasswordSuccess,
-    changePasswordFailure
+    changePasswordFailure,
+    initializeCsrfRequest,
+    initializeCsrfSuccess,
+    initializeCsrfFailure
 } from "./authSlice";
 
 import {
@@ -51,11 +54,31 @@ function* handleGetCsrfToken() {
             response?.data?.data?.csrf_token ||
             response?.data?.csrf_token;
 
-        if (token) {
-            setCsrfToken(token);
+        if (!token) {
+            throw new Error("CSRF token was not returned by the server.");
         }
+
+        setCsrfToken(token);
+
+        return token;
     } catch (error) {
         console.error("CSRF token request failed:", error);
+        throw error;
+    }
+}
+
+function* handleInitializeCsrf() {
+    try {
+        yield call(handleGetCsrfToken);
+        yield put(initializeCsrfSuccess());
+    } catch (error) {
+        yield put(
+            initializeCsrfFailure(
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to initialize CSRF token."
+            )
+        );
     }
 }
 
@@ -176,6 +199,12 @@ function* handleChangePassword(action) {
 }
 
 export default function* authSaga() {
+
+    yield takeLatest(
+        initializeCsrfRequest.type,
+        handleInitializeCsrf
+    );
+
     yield takeLatest(
         loginRequest.type,
         handleLogin

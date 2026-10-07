@@ -6,6 +6,7 @@ import {
     getProfileRequest,
     logoutRequest,
     changePasswordRequest,
+    initializeCsrfRequest,
     clearAuthError
 } from "../authSlice";
 
@@ -25,6 +26,11 @@ export function useAuth() {
     const loading = useSelector(selectAuthLoading);
     const error = useSelector(selectAuthError);
     const initialized = useSelector(selectAuthInitialized);
+
+    const initializeCsrf = useCallback(
+        () => dispatch(initializeCsrfRequest()),
+        [dispatch]
+    );
 
     const login = useCallback(
         (credentials) => dispatch(loginRequest(credentials)),
@@ -62,6 +68,7 @@ export function useAuth() {
         loadProfile,
         logout,
         changePassword,
+        initializeCsrf,
         clearError
     };
 }

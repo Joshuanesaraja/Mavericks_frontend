@@ -84,10 +84,10 @@ const NotificationButton = styled.button`
 
     &:hover {
         background: ${({ theme }) =>
-            theme.colors.background};
+        theme.colors.background};
 
         border-color: ${({ theme }) =>
-            theme.colors.primary};
+        theme.colors.primary};
     }
 `;
 
@@ -126,7 +126,11 @@ const NotificationBadge = styled.span`
 
 function Header() {
     const navigate = useNavigate();
-
+    const { user } = useAuth();
+    const roles = user?.roles || [];
+    const canAccessNotifications =
+        roles.includes("Provider") ||
+        roles.includes("Nurse")
     const {
         logout,
         loading,
@@ -163,7 +167,7 @@ function Header() {
             <UserSection>
 
                 {/* Notification button */}
-                <NotificationButton
+                {canAccessNotifications && <NotificationButton
                     type="button"
                     onClick={
                         handleNotificationsClick
@@ -180,7 +184,7 @@ function Header() {
                                 : unreadCount}
                         </NotificationBadge>
                     )}
-                </NotificationButton>
+                </NotificationButton>}
 
 
                 {/* Theme button */}

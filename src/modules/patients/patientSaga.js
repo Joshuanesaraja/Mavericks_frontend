@@ -14,6 +14,11 @@ import {
 } from "./patientAPI";
 
 import {
+    saveCachedPatients,
+    getCachedPatients
+} from "../appointments/appointmentOfflineDB";
+
+import {
     getPatientsRequest,
     getPatientsSuccess,
     getPatientsFailure,
@@ -45,22 +50,99 @@ import {
 
 
 function* handleGetAllPatients() {
-    try {
-        const response = yield call(
-            getAllPatients
-        );
+    const isOnline =
+        typeof navigator === "undefined"
+            ? true
+            : navigator.onLine;
 
-        const data = getResponseData(response);
+    if (!isOnline) {
+        try {
+            const cachedPatients =
+                yield call(
+                    getCachedPatients
+                );
+
+            if (cachedPatients.length > 0) {
+                yield put(
+                    getAllPatientsSuccess(
+                        cachedPatients
+                    )
+                );
+
+                return;
+            }
+
+            yield put(
+                getAllPatientsFailure(
+                    "No cached patients available while offline."
+                )
+            );
+        } catch (error) {
+            yield put(
+                getAllPatientsFailure(
+                    "Unable to load patients offline."
+                )
+            );
+        }
+
+        return;
+    }
+
+    try {
+        const response =
+            yield call(getAllPatients);
+
+        const data =
+            getResponseData(response);
 
         const patients =
             Array.isArray(data)
                 ? data
                 : data?.patients || [];
 
+        try {
+            yield call(
+                saveCachedPatients,
+                patients
+            );
+        } catch (cacheError) {
+            // Cache failure should not block the online response.
+        }
+
         yield put(
-            getAllPatientsSuccess(patients)
+            getAllPatientsSuccess(
+                patients
+            )
         );
     } catch (error) {
+        const isNetworkFailure =
+            !error?.response &&
+            (
+                error?.code === "ERR_NETWORK" ||
+                error?.code === "ECONNABORTED"
+            );
+
+        if (isNetworkFailure) {
+            try {
+                const cachedPatients =
+                    yield call(
+                        getCachedPatients
+                    );
+
+                if (cachedPatients.length > 0) {
+                    yield put(
+                        getAllPatientsSuccess(
+                            cachedPatients
+                        )
+                    );
+
+                    return;
+                }
+            } catch (cacheError) {
+                // Fall through to normal error handling.
+            }
+        }
+
         yield put(
             getAllPatientsFailure(
                 getErrorMessage(error)
@@ -214,14 +296,12 @@ function* handleGetPatient(action) {
 
 function* handleCreatePatient(action) {
     try {
-        const response =
-            yield call(
-                createPatient,
-                action.payload
-            );
+        const response = yield call(
+            createPatient,
+            action.payload
+        );
 
-        const data =
-            getResponseData(response);
+        const data = getResponseData(response);
 
         yield put(
             createPatientSuccess(data)
