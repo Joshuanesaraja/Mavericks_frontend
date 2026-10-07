@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
-import { useAuth } from "../../modules/auth/hooks/useAuth";
-import { getRoleLandingPath } from "../../routes/RoleBasedRoute";
-
 import Button from "../../components/common/Button";
 import Input from "../../components/common/Input";
+
+import {
+    registerRequest
+} from "../../modules/auth/authSlice";
+
+import {
+    selectAuthLoading,
+    selectAuthError,
+    selectRegistration
+} from "../../modules/auth/selectors";
 
 const PageContainer = styled.div`
     display: flex;
@@ -91,11 +99,11 @@ const MarketingDescription = styled.p`
     line-height: 1.7;
 `;
 
-const LoginCard = styled.div`
+const RegisterCard = styled.div`
     width: 100%;
     max-width: 480px;
 
-    padding: ${({ theme }) => theme.spacing.xxl};
+    padding: ${({ theme }) => theme.spacing.xl};
 
     background: ${({ theme }) => theme.colors.surface};
 
@@ -105,11 +113,10 @@ const LoginCard = styled.div`
     box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
 
-const LoginTitle = styled.h2`
+
+const RegisterTitle = styled.h2`
     margin: 0;
-
     color: ${({ theme }) => theme.colors.text};
-
     text-align: center;
 `;
 
@@ -132,6 +139,12 @@ const Label = styled.label`
     font-weight: 600;
 `;
 
+const Hint = styled.span`
+    color: ${({ theme }) => theme.colors.textSecondary};
+
+    font-size: ${({ theme }) => theme.typography.small};
+`;
+
 const ErrorMessage = styled.div`
     padding: ${({ theme }) => theme.spacing.sm}
         ${({ theme }) => theme.spacing.md};
@@ -144,14 +157,26 @@ const ErrorMessage = styled.div`
     font-size: ${({ theme }) => theme.typography.small};
 `;
 
-const LoginButton = styled(Button)`
+const SuccessMessage = styled.div`
+    margin-bottom: ${({ theme }) => theme.spacing.md};
+
+    padding: ${({ theme }) => theme.spacing.sm}
+        ${({ theme }) => theme.spacing.md};
+
+    border-radius: ${({ theme }) => theme.radius.sm};
+
+    background: rgba(22, 163, 74, 0.08);
+    color: ${({ theme }) => theme.colors.success};
+
+    font-size: ${({ theme }) => theme.typography.small};
+`;
+
+const RegisterButton = styled(Button)`
     width: 100%;
     margin-top: ${({ theme }) => theme.spacing.sm};
 `;
 
-const RegisterLink = styled.button`
-    width: 100%;
-
+const LoginLink = styled.button`
     margin-top: ${({ theme }) => theme.spacing.md};
 
     border: none;
@@ -169,43 +194,72 @@ const RegisterLink = styled.button`
     }
 `;
 
-function LoginPage() {
+function RegisterPage() {
     const navigate = useNavigate();
 
-    const {
-        login,
-        loading,
-        error,
-        clearError,
-        isAuthenticated,
-        user
-    } = useAuth();
+    const dispatch = useDispatch();
 
+    const loading = useSelector(selectAuthLoading);
+    const authError = useSelector(selectAuthError);
+    const registration = useSelector(selectRegistration);
+
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [subdomain, setSubdomain] = useState("");
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     useEffect(() => {
-        if (isAuthenticated) {
-            navigate(getRoleLandingPath(user?.roles || []), {
-                replace: true
-            });
+        if (!registration) {
+            return;
         }
-    }, [isAuthenticated, user, navigate]);
+
+        setSuccess(
+            `Tenant "${registration.tenant_name}" created successfully. ` +
+            `Your tenant is ${registration.subdomain}.localhost:8000. ` +
+            "Redirecting to login..."
+        );
+
+        const timer = setTimeout(() => {
+            window.location.href =
+                `http://${registration.subdomain}.localhost:3000/login`;
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [registration, navigate]);
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        clearError();
+        setError("");
 
-        login({
-            email,
-            password
-        });
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters.");
+            return;
+        }
+
+        if (!subdomain) {
+            setError("Tenant subdomain is required.");
+            return;
+        }
+
+        dispatch(
+            registerRequest({
+                name,
+                email,
+                password,
+                subdomain
+            })
+        );
     };
 
     return (
         <PageContainer>
+
             <MarketingPanel>
+
                 <MarketingBrand>
                     <MarketingBrandTitle>
                         Healthcare MVP
@@ -217,6 +271,7 @@ function LoginPage() {
                 </MarketingBrand>
 
                 <MarketingContent>
+
                     <MarketingTitle>
                         Better Care
                         <br />
@@ -236,21 +291,75 @@ function LoginPage() {
                         <br />
                         platform.
                     </MarketingDescription>
+
                 </MarketingContent>
+
             </MarketingPanel>
 
-            <LoginCard>
-                <LoginTitle>
-                    Sign in to your account
-                </LoginTitle>
+            <RegisterCard>
 
-                {error && (
+                <RegisterTitle>
+                    Create your tenant
+                </RegisterTitle>
+
+                {(error || authError) && (
                     <ErrorMessage>
-                        {error}
+                        {error || authError}
                     </ErrorMessage>
                 )}
 
+                {success && (
+                    <SuccessMessage>
+                        {success}
+                    </SuccessMessage>
+                )}
+
                 <Form onSubmit={handleSubmit}>
+
+                    <Field>
+                        <Label htmlFor="name">
+                            Hospital / Tenant Name
+                        </Label>
+
+                        <Input
+                            id="name"
+                            name="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) =>
+                                setName(e.target.value)
+                            }
+                            placeholder="Enter tenant name"
+                            required
+                        />
+                    </Field>
+
+                    <Field>
+                        <Label htmlFor="subdomain">
+                            Tenant Subdomain
+                        </Label>
+
+                        <Input
+                            id="subdomain"
+                            name="subdomain"
+                            type="text"
+                            value={subdomain}
+                            onChange={(e) =>
+                                setSubdomain(
+                                    e.target.value
+                                        .toLowerCase()
+                                        .replace(/[^a-z0-9-]/g, "")
+                                )
+                            }
+                            placeholder="e.g. testhospital"
+                            required
+                        />
+
+                        <Hint>
+                            Your tenant URL will use this subdomain.
+                        </Hint>
+                    </Field>
+
                     <Field>
                         <Label htmlFor="email">
                             Email
@@ -282,31 +391,33 @@ function LoginPage() {
                             onChange={(e) =>
                                 setPassword(e.target.value)
                             }
-                            placeholder="Enter your password"
+                            placeholder="Minimum 8 characters"
                             required
                         />
                     </Field>
 
-                    <LoginButton
+                    <RegisterButton
                         type="submit"
                         disabled={loading}
                     >
                         {loading
-                            ? "Signing in..."
-                            : "Sign In"}
-                    </LoginButton>
+                            ? "Creating Tenant..."
+                            : "Create Tenant"}
+                    </RegisterButton>
 
-                    <RegisterLink
+                    <LoginLink
                         type="button"
-                        onClick={() => navigate("/register")}
+                        onClick={() => navigate("/login")}
                     >
-                        Don't have an account?
-                        {" "}Click here to register
-                    </RegisterLink>
+                        Already have an account? Sign in
+                    </LoginLink>
+
                 </Form>
-            </LoginCard>
+
+            </RegisterCard>
+
         </PageContainer>
     );
 }
 
-export default LoginPage;
+export default RegisterPage;
